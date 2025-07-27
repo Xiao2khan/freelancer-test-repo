@@ -1,14 +1,13 @@
 package com.respiroc.ledger.application
 
-import com.respiroc.ledger.domain.model.Account
-import jakarta.annotation.PostConstruct
-import org.springframework.core.io.ClassPathResource
-import org.springframework.stereotype.Service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-
+import com.respiroc.ledger.domain.model.Account
+import jakarta.annotation.PostConstruct
+import org.springframework.core.io.ClassPathResource
+import org.springframework.stereotype.Service
 
 @Service
 class AccountService {
@@ -33,6 +32,4 @@ class AccountService {
     fun findAllAccounts(): Collection<Account> {
         return accounts.values
     }
-
-
 }

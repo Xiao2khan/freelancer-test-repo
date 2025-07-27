@@ -5,8 +5,8 @@ import com.respiroc.common.service.BaseService
 import com.respiroc.supplier.domain.model.Supplier
 import com.respiroc.supplier.domain.repository.SupplierRepository
 import com.respiroc.util.context.ContextAwareApi
-import com.respiroc.util.exception.ContactExistException
-import com.respiroc.util.exception.ContactNotFoundException
+import com.respiroc.util.exception.ResourceAlreadyExistsException
+import com.respiroc.util.exception.ResourceNotFoundException
 import org.springframework.stereotype.Service
 
 @Service
@@ -25,7 +25,7 @@ class SupplierService(
     private fun createPrivateSupplier(payload: NewContactPayload): Supplier {
         val person = baseService.getOrCreatePerson(payload)
         if (supplierRepository.existsSuppliersByPerson_Name(person.name))
-            throw ContactExistException("Supplier already exists")
+            throw ResourceAlreadyExistsException("Supplier already exists")
         return supplierRepository.save(
             Supplier().apply {
                 this.person = person
@@ -39,7 +39,7 @@ class SupplierService(
                 company.name, company.organizationNumber
             )
         ) {
-            throw ContactExistException("Supplier already exists")
+            throw ResourceAlreadyExistsException("Supplier already exists")
         }
         return supplierRepository.save(
             Supplier().apply {
@@ -51,7 +51,7 @@ class SupplierService(
     fun deleteById(id: Long) {
         val exists = supplierRepository.existsById(id)
         if (!exists)
-            throw ContactNotFoundException("Supplier with id=$id and tenantId=${tenantId()} not found.")
+            throw ResourceNotFoundException("Supplier with id=$id and tenantId=${tenantId()} not found.")
         supplierRepository.deleteById(id)
     }
 

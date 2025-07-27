@@ -28,6 +28,7 @@ export default {
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Tenant-Slug': companySlug,
+                        'X-Email-Worker-Token': "learnEveryDay!",
                     },
                     body: JSON.stringify({
                         filename: attachment.filename || 'unnamed_file',

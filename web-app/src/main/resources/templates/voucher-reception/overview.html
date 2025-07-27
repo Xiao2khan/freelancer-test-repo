@@ -3,22 +3,23 @@
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <link rel="stylesheet" th:href="@{/assets/voucher/voucher-reception.css}">
-    <script src="/assets/voucher/voucher-reception.js"></script>
+    <link rel="stylesheet" th:href="@{/assets/common/upload.css}">
+    <script th:src="@{/assets/common/upload.js}"></script>
 </head>
 <body>
 <main layout:fragment="content">
     <div style="visibility:hidden; opacity:0" id="dropzone">
-        <div id="textnode" th:text="#{Drop_files_anywhere}" />
+        <div id="textnode" th:text="#{Drop_files_anywhere}"/>
     </div>
 
     <form id="upload-form"
-          hx-post="/voucher-reception/upload"
-          hx-target="#document-table-body"
-          hx-swap="outerHTML"
-          hx-encoding="multipart/form-data"
+          th:hx-post="'/htmx/voucher-reception/upload'"
+          th:hx-target="'#table-container'"
+          th:hx-target-error="'#r-callout'"
+          th:hx-swap="'outerHTML'"
+          th:hx-encoding="'multipart/form-data'"
           style="display:none">
-        <input type="file" name="files" id="file-input" multiple />
-        <input type="hidden" name="tenantSlug" th:value="${tenantSlug}" />
+        <input type="file" name="files" id="file-input" multiple/>
     </form>
 
     <div id="pageContent" class="r-voucher-reception-container">
@@ -34,43 +35,51 @@
         </wa-callout>
 
         <div style="overflow-x: auto;">
-            <table class="r-voucher-reception-table">
-                <thead>
-                <tr>
-                    <th th:text="#{filename}"/>
-                    <th th:text="#{sender_Uploader_email}"/>
-                </tr>
-                </thead>
-                <tbody id="document-table-body" th:fragment="documentTableBody">
-                <tr th:each="document : ${documents}"
-                    th:hx-get="@{/voucher-reception/document/{id}/pdf(id=${document.id})}"
-                    hx-target="#pdf-embed"
-                    hx-swap="outerHTML"
-                    data-drawer="open drawer-custom-size"
-                    hx-trigger="click delay:200ms"
-                    style="cursor: pointer;">
-                    <td th:text="${document.attachment.filename}"></td>
-                    <td th:text="${document.senderEmail ?: '-'}"></td>
-                </tr>
-                </tbody>
-            </table>
+            <div id="table-container" class="wa-stack wa-gap-m" th:fragment="tableContainer">
+                <wa-card th:if="${#lists.isEmpty(documents)}" style="border-radius: var(--wa-border-radius-square)">
+                    <div class="wa-align-items-center">
+                        <div class="wa-stack wa-gap-m wa-align-items-center">
+                            <wa-icon name="chart-line"
+                                     style="font-size: var(--wa-font-size-4xl); opacity: 0.5;"></wa-icon>
+                            <h3 class="wa-heading-m" th:text="#{no_voucher_reception_found}"/>
+                        </div>
+                    </div>
+                </wa-card>
 
-            <div class="r-empty-state" th:if="${#lists.isEmpty(documents)}">
-                <div class="r-empty-state-icon">
-                    <wa-icon name="table"></wa-icon>
-                </div>
-                <h3 th:text="#{no_Data_available}"/>
-                <p th:text="#{no_voucher_reception_found}"/>
+                <table class="r-voucher-reception-table" th:if="${!#lists.isEmpty(documents)}">
+                    <thead>
+                    <tr>
+                        <th th:text="#{filename}"/>
+                        <th th:text="#{sender_Uploader_email}"/>
+                    </tr>
+                    </thead>
+                    <tbody id="document-table-body">
+                    <tr th:each="document : ${documents}"
+                        th:onclick="activateSplit()"
+                        th:hx-get="@{/voucher-reception/document/{id}/pdf(id=${document.id})}"
+                        th:hx-target="'#pdf-container'"
+                        th:hx-target-error="'#r-callout'"
+                        th:hx-swap="'innerHTML'"
+                        th:hx-trigger="'click delay:200ms'"
+                        style="cursor: pointer;">
+                        <td th:text="${document.attachment.filename}"></td>
+                        <td th:text="${document.senderEmail ?: '-'}"></td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-
-        <wa-drawer id="drawer-custom-size" class="drawer-custom-size" style="--size: 45vw; --spacing: 0">
-            <div id="pdf-container" style="height: 100%; overflow-y: hidden;">
-                <embed id="pdf-embed" type="application/pdf" style="width: 100%; height: 100%; border: none; display: none;"/>
-            </div>
-        </wa-drawer>
     </div>
 
 </main>
+
+<div layout:fragment="aside">
+    <div id="aside-split" style="height: 100%">
+        <div id="pdf-container" style="height: 100%; overflow-y: hidden;">
+            <embed id="pdf-embed" type="application/pdf"/>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

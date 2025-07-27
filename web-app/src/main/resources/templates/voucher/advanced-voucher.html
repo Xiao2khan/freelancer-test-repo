@@ -3,16 +3,29 @@
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <link rel="stylesheet" th:href="@{/assets/voucher/advanced-voucher.css}">
-
+    <link rel="stylesheet" th:href="@{/assets/common/upload.css}">
+    <script th:src="@{/assets/common/upload.js}"></script>
     <th:block th:replace="~{fragments/r-combobox :: r-combobox-dependencies}"></th:block>
 </head>
 
 <body>
 <main layout:fragment="content">
+    <div style="visibility:hidden; opacity:0" id="dropzone">
+        <div id="textnode" th:text="#{Drop_files_anywhere}"/>
+    </div>
+
+    <form id="upload-form"
+          th:hx-post="'/htmx/voucher-attachment/upload'"
+          th:hx-target="'#attachments-table-container'"
+          th:hx-target-error="'#r-callout'"
+          th:hx-swap="'innerHTML'"
+          th:hx-encoding="'multipart/form-data'"
+          style="display:none">
+        <input type="file" name="files" id="file-input" multiple/>
+        <input type="hidden" name="voucherId" th:value="${voucherId}"/>
+    </form>
+
     <div>
-
-        <div id="form-messages"></div>
-
         <div style="display: none;">
             <div>
                 <wa-icon name="clock" style="margin-right: var(--wa-space-s);"/>
@@ -22,7 +35,8 @@
 
         <form th:hx-indicator="'#loading-indicator'"
               th:hx-disabled-elt="'#saveButton'"
-              th:hx-target="'#form-messages'"
+              th:hx-target="'#r-callout'"
+              th:hx-target-error="'#r-callout'"
               th:hx-post="@{/htmx/voucher/update/{voucherId}(voucherId=${voucherId}, tenantId=${user.ctx.currentTenant?.id})}"
               id="voucherForm"
               th:hx-swap="'innerHTML'"
@@ -34,20 +48,70 @@
                     <wa-button appearance="plain" th:text="#{voucher_upload_files}"/>
                 </div>
 
-                <div class="wa-stack">
+                <!-- Voucher Information - Date and Description on same line -->
+                <div class="wa-cluster" style="gap: var(--wa-space-m);">
                     <div>
-                        <label for="voucherDate" th:utext="#{voucher_date_label}">Date <span>*</span></label>
+                        <label for="voucherDate" th:utext="#{voucher_date_label}"><span>*</span></label>
                         <wa-input id="voucherDate" name="voucherDate" required size="small"
                                   th:value="${voucherDate}"
                                   type="date"/>
                     </div>
-                    <div>
+                    <div style="flex: 1;">
                         <label for="voucherDescription" th:text="#{description}"/>
                         <wa-input id="voucherDescription" name="voucherDescription"
                                   size="small"
                                   th:placeholder="#{description}"
                                   th:value="${voucher?.description ?: ''}"
                                   type="text"/>
+                    </div>
+                </div>
+
+                <!-- Attachments Section - Below voucher information -->
+                <div class="wa-stack wa-gap-s" style="margin-top: var(--wa-space-l);">
+                    <div class="wa-split">
+                        <h5 class="wa-heading-s" th:text="#{attachments}"/>
+                    </div>
+
+                    <div id="attachments-table-container" th:fragment="attachmentsTable">
+
+                        <div class="wa-stack wa-align-items-center wa-placeholder wa-link-plain"
+                             th:if="${#lists.isEmpty(attachments)}"
+                             style="margin: auto;">
+                            <wa-icon name="paperclip" style="font-size: var(--wa-font-size-2xl);"
+                                     class="wa-caption-l"></wa-icon>
+                            <p class="wa-heading-m" th:text="#{no_attachments_found}"/>
+                        </div>
+
+                        <div class="wa-stack wa-gap-xs" th:if="${!#lists.isEmpty(attachments)}">
+                            <div th:each="attachment : ${attachments}"
+                                 class="wa-split wa-align-items-center"
+                                 style="padding: var(--wa-space-xs); border-radius: var(--wa-border-radius-s); background: var(--wa-color-surface-raised);">
+                                <div style="flex: 1; min-width: 0;">
+                                    <div class="wa-text-s"
+                                         th:text="${attachment.attachment.filename}"
+                                         style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"/>
+                                </div>
+                                <div class="wa-cluster wa-gap-xs" style="justify-content: end;">
+                                    <wa-button type="button" size="small" variant="neutral"
+                                               th:onclick="activateSplit()"
+                                               th:hx-get="@{/voucher-attachment/document/{id}/pdf(id=${attachment.id})}"
+                                               th:hx-target="'#pdf-container'"
+                                               th:hx-target-error="'#r-callout'"
+                                               th:hx-swap="'innerHTML'"
+                                               th:hx-trigger="'click delay:200ms'">
+                                        <wa-icon label="Show" name="paperclip"></wa-icon>
+                                    </wa-button>
+                                    <wa-button type="button" size="small" variant="danger"
+                                               th:hx-delete="@{/htmx/voucher-attachment/{id}(id=${attachment.id}, voucherId=${voucherId})}"
+                                               th:hx-target="'#attachments-table-container'"
+                                               th:hx-target-error="'#r-callout'"
+                                               th:hx-swap="'innerHTML'"
+                                               th:hx-confirm="'Are you sure you want to delete this attachment?'">
+                                        <wa-icon label="Delete attachment" name="trash"></wa-icon>
+                                    </wa-button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </wa-card>
@@ -132,11 +196,12 @@
                                               th:id="'posting-lines-amount-' + ${iterStat.index}"
                                               min="0" step="0.01" placeholder="Amount"
                                               th:value="${postingLine.amount != null ? #numbers.formatDecimal(postingLine.amount, 1, 2) : ''}"
-                                              th:attr="hx-get=@{/htmx/currency/convert(toCurrency=${companyCurrencyCode})},
-                                                       hx-trigger='change, keyup delay:500ms',
-                                                       hx-target=|#converted-amount-${iterStat.index}|,
-                                                       hx-swap='innerHTML',
-                                                       hx-include=|#posting-lines-amount-${iterStat.index}, #posting-lines-currency-${iterStat.index}|"></wa-input>
+                                              th:hx-get="@{/htmx/currency/convert(toCurrency=${companyCurrencyCode})}"
+                                              th:hx-trigger="'change, keyup delay:500ms'"
+                                              th:hx-target="|#converted-amount-${iterStat.index}|"
+                                              th:hx-target-error="'#r-callout'"
+                                              th:hx-swap="'innerHTML'"
+                                              th:hx-include="|#posting-lines-amount-${iterStat.index}, #posting-lines-currency-${iterStat.index}|"></wa-input>
                                     <div th:id="'converted-amount-' + ${iterStat.index}"
                                          class="converted-amount-display"></div>
                                 </div>
@@ -146,11 +211,12 @@
                                            th:tabindex="${iterStat.index * 10 + 5}"
                                            th:name="'postingLines[' + ${iterStat.index} + '].currency'"
                                            th:id="'posting-lines-currency-' + ${iterStat.index}"
-                                           th:attr="hx-get=@{/htmx/currency/convert(toCurrency=${companyCurrencyCode})},
-                                                    hx-trigger='change',
-                                                    hx-target=|#converted-amount-${iterStat.index}|,
-                                                    hx-swap='innerHTML',
-                                                    hx-include=|#posting-lines-amount-${iterStat.index}, #posting-lines-currency-${iterStat.index}|">
+                                           th:hx-get="@{/htmx/currency/convert(toCurrency=${companyCurrencyCode})}"
+                                           th:hx-trigger="'change'"
+                                           th:hx-target="|#converted-amount-${iterStat.index}|"
+                                           th:hx-target-error="'#r-callout'"
+                                           th:hx-swap="'innerHTML'"
+                                           th:hx-include="|#posting-lines-amount-${iterStat.index}, #posting-lines-currency-${iterStat.index}|">
                                     <wa-option th:each="currency : ${supportedCurrencies}"
                                                th:value="${currency}" th:text="${currency}"
                                                th:selected="${currency == postingLine.currency}">
@@ -207,6 +273,14 @@
 
     </div>
 </main>
+
+<div layout:fragment="aside">
+    <div id="aside-split" style="height: 100%">
+        <div id="pdf-container" style="height: 100%; overflow-y: hidden;">
+            <embed id="pdf-embed" type="application/pdf"/>
+        </div>
+    </div>
+</div>
 
 <th:block layout:fragment="scripts">
     <script th:inline="javascript">

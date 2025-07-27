@@ -10,11 +10,12 @@
             <form id="registerBankAccountForm"
                   th:object="${account}"
                   method="post"
-                  hx-post="/htmx/bank/account"
-                  hx-indicator="#loading-indicator"
-                  hx-disabled-elt="#submitButton"
+                  th:hx-post="@{/htmx/bank/account}"
+                  th:hx-indicator="'#loading-indicator'"
+                  th:hx-disabled-elt="'#submitButton'"
+                  th:hx-target-error="'#r-callout'"
                   style="--min-column-size: 500px;"
-                  hx-swap="outerHTML">
+                  th:hx-swap="'innerHTML'">
                 <div class="wa-grid">
                     <wa-select
                             id="countryCode"

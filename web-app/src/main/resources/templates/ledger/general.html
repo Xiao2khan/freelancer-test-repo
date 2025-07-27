@@ -17,6 +17,7 @@
                                   th:value="${startDate}"
                                   th:hx-get="'/htmx/ledger/general'"
                                   th:hx-target="'#tableContent'"
+                                  th:hx-target-error="'#r-callout'"
                                   th:hx-indicator="'#loading-indicator'"
                                   th:hx-trigger="'change'"
                                   th:hx-include="'[name=\'endDate\'], [name=\'accountNumber\']'"></wa-input>
@@ -30,6 +31,7 @@
                                   th:value="${endDate}"
                                   th:hx-get="'/htmx/ledger/general'"
                                   th:hx-target="'#tableContent'"
+                                  th:hx-target-error="'#r-callout'"
                                   th:hx-indicator="'#loading-indicator'"
                                   th:hx-trigger="'change'"
                                   th:hx-include="'[name=\'startDate\'], [name=\'accountNumber\']'"></wa-input>
@@ -41,8 +43,8 @@
                 <wa-card>
                     <wa-progress-bar id="loading-indicator" indeterminate class="htmx-indicator"></wa-progress-bar>
                     <div class="wa-stack wa-gap-m">
-                        <div th:if="${generalLedgerData.accounts.empty}" class="wa-center">
-                            <div class="wa-stack wa-gap-m wa-center">
+                        <div th:if="${#lists.isEmpty(generalLedgerData.accounts)}" class="wa-align-items-center">
+                            <div class="wa-stack wa-gap-m wa-align-items-center">
                                 <wa-icon name="chart-line" style="font-size: var(--wa-font-size-4xl); opacity: 0.5;"></wa-icon>
                                 <h3 class="wa-heading-m" th:text="#{no_data_found}"/>
                                 <p class="wa-body" th:text="#{no_transaction_found}"/>
@@ -51,7 +53,7 @@
 
                         <wa-scroller>
                             <table id="ledgerTable" style="--wa-table-row-padding: var(--wa-space-xs);"
-                                   th:unless="${generalLedgerData.accounts.empty}">
+                                   th:unless="${#lists.isEmpty(generalLedgerData.accounts)}">
                                 <thead>
                                 <tr>
                                     <th th:text="#{closed}"/>

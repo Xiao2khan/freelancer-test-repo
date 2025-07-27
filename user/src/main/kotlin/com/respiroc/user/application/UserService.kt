@@ -16,10 +16,10 @@ import com.respiroc.util.constant.TenantRoleCode
 import com.respiroc.util.context.*
 import com.respiroc.util.currency.CurrencyService
 import com.respiroc.util.exception.UnauthorizedException
+import com.respiroc.util.exception.AuthenticationException
+import com.respiroc.util.exception.ResourceAlreadyExistsException
 import com.respiroc.util.payload.CreateCompanyPayload
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker
-import org.springframework.security.authentication.BadCredentialsException
-import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -210,9 +210,7 @@ class UserService(
 
     fun signupByEmailPassword(email: String, password: String): LoginPayload {
         val existUser = userRepository.findByEmail(email)
-        if (existUser != null) {
-            throw IllegalArgumentException("User already exists")
-        }
+        if (existUser != null) throw ResourceAlreadyExistsException("User already exists")
 
         val newUser = User()
         newUser.email = email
@@ -224,8 +222,8 @@ class UserService(
         email: String,
         password: String
     ): LoginPayload {
-        val user = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("Email not found")
-        if (!passwordEncoder.matches(password, user.passwordHash)) throw BadCredentialsException("Login incorrect")
+        val user = userRepository.findByEmail(email) ?: throw AuthenticationException("Email not found")
+        if (!passwordEncoder.matches(password, user.passwordHash)) throw AuthenticationException("Login incorrect")
 
         return login(user)
     }

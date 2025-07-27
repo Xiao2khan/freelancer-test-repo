@@ -5,8 +5,8 @@ import com.respiroc.common.service.BaseService
 import com.respiroc.customer.domain.model.Customer
 import com.respiroc.customer.domain.repository.CustomerRepository
 import com.respiroc.util.context.ContextAwareApi
-import com.respiroc.util.exception.ContactExistException
-import com.respiroc.util.exception.ContactNotFoundException
+import com.respiroc.util.exception.ResourceAlreadyExistsException
+import com.respiroc.util.exception.ResourceNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -27,7 +27,7 @@ class CustomerService(
     private fun createPrivateCustomer(payload: NewContactPayload): Customer {
         val person = baseService.getOrCreatePerson(payload)
         if (customerRepository.existsCustomersByPerson_Name(person.name))
-            throw ContactExistException("Customer already exists")
+            throw ResourceAlreadyExistsException("Customer already exists")
         return customerRepository.save(
             Customer().apply {
                 this.person = person
@@ -41,7 +41,7 @@ class CustomerService(
                 company.name, company.organizationNumber
             )
         ) {
-            throw ContactExistException("Customer already exists")
+            throw ResourceAlreadyExistsException("Customer already exists")
         }
         return customerRepository.save(
             Customer().apply {
@@ -53,7 +53,7 @@ class CustomerService(
     fun deleteById(id: Long) {
         val exists = customerRepository.existsById(id)
         if (!exists)
-            throw ContactNotFoundException("Customer with id=$id and tenantId=${tenantId()} not found.")
+            throw ResourceNotFoundException("Customer with id=$id and tenantId=${tenantId()} not found.")
         customerRepository.deleteById(id)
     }
 

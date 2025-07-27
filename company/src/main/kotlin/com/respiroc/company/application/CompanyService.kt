@@ -17,42 +17,42 @@ class CompanyService(
     private val entityManager: EntityManager
 ) {
 
-    fun getOrCreateCompany(command: CreateCompanyPayload): Company {
-        var company = companyRepository.findCompanyByOrganizationNumberAndName(command.organizationNumber, command.name)
+    fun getOrCreateCompany(payload: CreateCompanyPayload): Company {
+        var company = companyRepository.findCompanyByOrganizationNumberAndName(payload.organizationNumber, payload.name)
         if (company == null)
-            company = createCompany(command)
+            company = createCompany(payload)
         else if (company.addressId == null) {
-            company.address = getOrCreateAddress(command)
+            company.address = getOrCreateAddress(payload)
             company = companyRepository.save(company)
         }
         company.currencyCode = currencyService.getCompanyCurrency(company.countryCode)
         return company
     }
 
-    private fun createCompany(command: CreateCompanyPayload): Company {
-        val address = getOrCreateAddress(command)
+    private fun createCompany(payload: CreateCompanyPayload): Company {
+        val address = getOrCreateAddress(payload)
         val company = Company()
-        company.name = command.name
-        company.organizationNumber = command.organizationNumber
-        company.countryCode = command.countryCode
+        company.name = payload.name
+        company.organizationNumber = payload.organizationNumber
+        company.countryCode = payload.countryCode
         company.address = address
         return companyRepository.save(company)
     }
 
-    private fun getOrCreateAddress(command: CreateCompanyPayload): Address? {
-        if (!isValidAddress(command)) return null
+    private fun getOrCreateAddress(payload: CreateCompanyPayload): Address? {
+        if (!isValidAddress(payload)) return null
         val address = Address(
-            city = command.city!!,
-            addressPart1 = command.addressPart1!!,
-            postalCode = command.postalCode,
-            countryIsoCode = command.addressCountryCode!!,
-            addressPart2 = command.addressPart2,
-            administrativeDivisionCode = command.administrativeDivisionCode
+            city = payload.city!!,
+            addressPart1 = payload.addressPart1!!,
+            postalCode = payload.postalCode,
+            countryIsoCode = payload.addressCountryCode!!,
+            addressPart2 = payload.addressPart2,
+            administrativeDivisionCode = payload.administrativeDivisionCode
         )
         return Address.upsertAddress(entityManager, address)
     }
 
-    private fun isValidAddress(command: CreateCompanyPayload): Boolean {
-        return !(command.addressPart1 == null || command.city == null || command.addressCountryCode == null)
+    private fun isValidAddress(payload: CreateCompanyPayload): Boolean {
+        return !(payload.addressPart1 == null || payload.city == null || payload.addressCountryCode == null)
     }
 }

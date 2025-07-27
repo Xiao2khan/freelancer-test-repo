@@ -4,11 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title != null ? title + ' - Reai' : 'Reai'}" />
+    <title th:text="${title != null ? title + ' - Reai' : 'Reai'}"/>
     <th:block th:replace="~{layout/libs :: common-libs}"></th:block>
     <link rel="stylesheet" th:href="@{/assets/base/base.css}">
 
-    <!-- Custom head content -->
     <th:block layout:fragment="head"></th:block>
 
     <th:block th:if="${@environment.getActiveProfiles().length > 0}">
@@ -16,12 +15,12 @@
         <script src="http://localhost:35729/livereload.js"></script>
     </th:block>
 </head>
-<body class="wa-cloak">
+<body hx-ext="response-targets" class="wa-cloak">
 
 <wa-page mobile-breakpoint="920" th:if="${user != null}">
     <header slot="header" class="wa-split">
         <div class="wa-cluster">
-            <span class="wa-heading-s wa-desktop-only" th:text="#{layout.header.title}" />
+            <span class="wa-heading-s wa-desktop-only" th:text="#{layout.header.title}"/>
             <wa-dropdown>
                 <wa-button slot="trigger" size="small" variant="brand" appearance="outlined" with-caret
                            th:text="${currentTenant != null ? currentTenant.companyName : 'Select Company'}">
@@ -31,20 +30,20 @@
                         th:each="tenant : ${tenants}"
                         th:hx-post="@{/htmx/auth/select-tenant(tenantId=${tenant.id})}"
                         th:hx-target="'body'"
+                        th:hx-target-error="'#r-callout'"
                         th:hx-swap="'innerHTML'"
                         th:hx-indicator="'#loading-indicator'"
                         th:disabled="${currentTenant?.id == tenant.id}">
 
-                    <span th:text="${tenant.companyName}" />
+                    <span th:text="${tenant.companyName}"/>
                 </wa-dropdown-item>
                 <div th:if="${hasTenantOwnerRole}">
                     <wa-divider></wa-divider>
-                    <wa-dropdown-item  onclick="window.open('/tenant/create')">
+                    <wa-dropdown-item onclick="window.open('/tenant/create')">
                         <wa-icon slot="icon" name="plus"></wa-icon>
-                        <span th:text="#{layout.company.selector.create}" />
+                        <span th:text="#{layout.company.selector.create}"/>
                     </wa-dropdown-item>
                 </div>
-
             </wa-dropdown>
         </div>
         <div class="wa-cluster wa-gap-xs">
@@ -77,35 +76,46 @@
     <nav slot="navigation"
          th:replace="~{fragments/navigation :: navigation(sections=${@navigationProvider.getNavigationSections()},user=${user})}"></nav>
 
-
-    <aside slot="aside" class="wa-desktop-only" th:if="${user != null}" id="aside-panel">
-        <div layout:fragment="aside" id="aside-content">
-            <!-- Aside content will be inserted here -->
+    <wa-split-panel disabled class="r-split-panel-disabled r-split-panel" id="main-split-panel" position="100"
+                    primary="start">
+        <div slot="start">
+            <div style="padding-left: var(--wa-space-l); padding-right: var(--wa-space-l); padding-top: var(--wa-space-l);">
+                <div id="r-callout"></div>
+            </div>
+            <main layout:fragment="content" id="main-content">
+                <!-- Page content will be inserted here -->
+            </main>
         </div>
-    </aside>
+        <div slot="end">
+            <div id="aside-panel" style="height: 100%">
+                <wa-button id="close-split-btn"
+                           onclick="disableSplit()"
+                           size="small"
+                           variant="neutral"
+                           style="
+                           display: none;
+                           position: fixed;
+                           top: 50%;
+                           transform: translateY(-50%) rotate(-0.25turn);
+                           z-index: 10;
+                           padding-left: var(--wa-space-xs);">
+                    ⮟
+                </wa-button>
+                <div layout:fragment="aside" id="aside-content" style="height: 100%">
+                    <!-- Aside content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </wa-split-panel>
 
-    <div th:if="${callout}" style="padding: var(--wa-space-m) var(--wa-space-l) 0;">
-        <wa-callout th:attr="variant=${callout.variant()}, data-link=${callout.link}" open
-                    th:classappend="${callout.link != null} ? 'clickable-callout' : ''"
-                    th:style="${callout.link != null} ? 'cursor: pointer;' : ''">
-            <wa-icon slot="icon" th:attr="name=${callout.icon()}" variant="regular"></wa-icon>
-            <span th:text="${callout.message}">Message</span>
-            <wa-icon th:if="${callout.link != null}" slot="action" name="arrow-up-right-from-square"
-                     variant="regular"></wa-icon>
-        </wa-callout>
-    </div>
-
-    <main layout:fragment="content" id="main-content">
-        <!-- Page content will be inserted here -->
-    </main>
 </wa-page>
-<script th:inline="javascript">
-    const shortcutAction = [[${shortcutAction}]] || null;
-</script>
-<!-- Custom JS -->
-<script th:src="@{/assets/base/base.js}"></script>
 
-<!-- Custom scripts -->
+<script th:inline="javascript">
+    const shortcutAction = /*[[${shortcutAction}]]*/ null;
+</script>
+
+<script th:src="@{/assets/base/base.js}"></script>
 <th:block layout:fragment="scripts"></th:block>
+
 </body>
 </html>

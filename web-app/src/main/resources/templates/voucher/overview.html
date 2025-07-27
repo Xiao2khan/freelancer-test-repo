@@ -17,6 +17,7 @@
                                   th:value="${startDate}"
                                   th:hx-get="'/htmx/voucher/overview'"
                                   th:hx-target="'#tableContent'"
+                                  th:hx-target-error="'#r-callout'"
                                   th:hx-indicator="'#loading-indicator'"
                                   th:hx-trigger="'change'"
                                   th:hx-include="'[name=\'endDate\']'"></wa-input>
@@ -30,6 +31,7 @@
                                   th:value="${endDate}"
                                   th:hx-get="'/htmx/voucher/overview'"
                                   th:hx-target="'#tableContent'"
+                                  th:hx-target-error="'#r-callout'"
                                   th:hx-indicator="'#loading-indicator'"
                                   th:hx-trigger="'change'"
                                   th:hx-include="'[name=\'startDate\']'"></wa-input>
@@ -41,9 +43,9 @@
                 <wa-card>
                     <wa-progress-bar id="loading-indicator" indeterminate class="htmx-indicator"></wa-progress-bar>
                     <div class="wa-stack wa-gap-m">
-                        <div th:if="${#lists.isEmpty(vouchers)}" class="wa-center">
-                            <div class="wa-stack wa-gap-m wa-center">
-                                <wa-icon name="document-text" style="font-size: var(--wa-font-size-4xl); opacity: 0.5;"></wa-icon>
+                        <div th:if="${#lists.isEmpty(vouchers)}" class="wa-align-items-center">
+                            <div class="wa-stack wa-gap-m wa-align-items-center">
+                                <wa-icon name="chart-line" style="font-size: var(--wa-font-size-4xl); opacity: 0.5;"></wa-icon>
                                 <h3 class="wa-heading-m" th:text="#{no_vouchers_found}"/>
                             </div>
                         </div>

@@ -45,28 +45,6 @@ wa-copy-button::part(button) {
     background-color: var(--wa-color-surface-raised);
 }
 
-div#dropzone {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 9;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(var(--wa-color-gray-05),0.5);
-    transition: visibility 175ms, opacity 175ms;
-    display: table;
-    text-shadow: 1px 1px 2px var(--wa-color-gray-05);
-    color: var(--wa-color-surface-default);
-    background: color-mix(in srgb, var(--wa-color-gray-05) 45%, transparent);
-    font: bold 42px Oswald, DejaVu Sans, Tahoma, sans-serif;
-}
-div#textnode {
-    display: table-cell;
-    text-align: center;
-    vertical-align: middle;
-    transition: font-size 175ms;
-}
-
 .r-empty-state {
     text-align: center;
     padding: var(--wa-space-4xl);
@@ -78,8 +56,6 @@ div#textnode {
     margin-bottom: var(--wa-space-m);
     opacity: 0.5;
 }
-
-
 
 @media (max-width: 768px) {
 

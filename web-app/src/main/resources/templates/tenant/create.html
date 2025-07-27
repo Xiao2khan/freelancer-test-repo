@@ -13,7 +13,8 @@
                 <form id="createCompanyForm"
                       th:object="${createCompanyRequest}"
                       th:hx-post="'/htmx/tenant/create'"
-                      th:hx-target="'#form-messages'"
+                      th:hx-target="'#r-callout'"
+                      th:hx-target-error="'#r-callout'"
                       th:hx-swap="'innerHTML'"
                       th:hx-indicator="'#loading-indicator'">
                     <div class="wa-stack">
@@ -31,6 +32,7 @@
                                     th:hx-indicator="'#loading-indicator'"
                                     th:hx-trigger="'input changed delay:200ms'"
                                     th:hx-target="'#name-dropdown'"
+                                    th:hx-target-error="'#r-callout'"
                                     th:hx-swap="'outerHTML'"
                                     slot="trigger"
                                     hx-include="[name='countryCode']">
@@ -53,8 +55,6 @@
                         </wa-select>
                         <small style="color: var(--wa-color-gray-60); display: block; margin-top: var(--wa-space-s);"
                                th:text="#{company.create.form.country.help}"/>
-                        <!-- Form Messages -->
-                        <div id="form-messages" style="margin-bottom: var(--wa-space-m);"></div>
                         <div style="display: flex; gap: 1rem; align-items: center;">
                             <wa-button class="disabled:r-opacity-25"
                                        type="submit" variant="success"

@@ -1,6 +1,5 @@
 wa-page {
     --menu-width: 15rem;
-    --aside-width: 15rem;
 }
 
 wa-page[view='desktop'] {
@@ -37,34 +36,10 @@ wa-page > [slot='header'] {
 }
 
 main {
-    max-inline-size: 60rem;
-    margin-inline: auto;
-    padding: var(--wa-space-l);
-}
-
-[slot='footer'] {
-    --wa-color-text-link: var(--wa-color-text-quiet);
-    background-color: var(--wa-color-surface-lowered);
-    font-size: var(--wa-font-size-s);
-}
-
-/* Dynamic aside width based on content */
-wa-page[data-aside-visible="false"] {
-    --aside-width: 0;
-}
-
-wa-page[data-aside-visible="true"] {
-    --aside-width: 15rem;
-}
-
-/* Hide aside when empty */
-wa-page[data-aside-visible="false"] [slot="aside"] {
-    display: none;
-}
-
-/* Expand main content when aside is hidden */
-wa-page[data-aside-visible="false"] main {
-    max-inline-size: 80rem;
+    padding-left: var(--wa-space-l);
+    padding-right: var(--wa-space-l);
+    padding-bottom: var(--wa-space-l);
+    min-height: 100vh;
 }
 
 .r-opacity-25 {
@@ -102,4 +77,19 @@ wa-page[data-aside-visible="false"] main {
 
 .w-20 {
     width: 20%;
+}
+
+.r-split-panel-disabled {
+    --divider-width: 0px;
+    --divider-hit-area: 0px;
+}
+
+.r-split-panel {
+    --min: 50%;
+}
+
+@media (max-width: 920px) {
+    .r-split-panel {
+        --min: 0%;
+    }
 }

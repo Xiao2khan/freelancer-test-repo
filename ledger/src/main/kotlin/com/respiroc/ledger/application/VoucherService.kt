@@ -1,15 +1,12 @@
 package com.respiroc.ledger.application
 
 import com.respiroc.ledger.application.payload.*
-import com.respiroc.ledger.domain.exception.AccountNotFoundException
-import com.respiroc.ledger.domain.exception.InvalidPostingsException
-import com.respiroc.ledger.domain.exception.InvalidVatCodeException
-import com.respiroc.ledger.domain.exception.PostingsNotBalancedException
 import com.respiroc.ledger.domain.model.Posting
 import com.respiroc.ledger.domain.model.Voucher
 import com.respiroc.ledger.domain.repository.PostingRepository
 import com.respiroc.ledger.domain.repository.VoucherRepository
 import com.respiroc.util.context.ContextAwareApi
+import com.respiroc.util.exception.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -36,7 +33,7 @@ class VoucherService(
         val savedVoucher = voucherRepository.save(voucher)
 
         if (payload.postings.isNotEmpty()) {
-            saveNonZeroPostings(payload.postings,savedVoucher.id)
+            saveNonZeroPostings(payload.postings, savedVoucher.id)
         }
 
         return VoucherPayload(
@@ -77,7 +74,7 @@ class VoucherService(
 
     fun updateVoucherWithPostings(payload: UpdateVoucherPayload): VoucherPayload {
         val voucher = voucherRepository.findByIdWithPostings(payload.id)
-            ?: throw IllegalArgumentException("Voucher not found")
+            ?: throw ResourceNotFoundException("Voucher not found")
 
         if (payload.postings.isNotEmpty()) {
             validatePostingCommands(payload.postings)
@@ -122,7 +119,7 @@ class VoucherService(
         // Ensure there are at least 2 non-zero postings for valid double-entry bookkeeping
         val nonZeroPostingsCount = postings.count { it.amount.compareTo(BigDecimal.ZERO) != 0 }
         if (nonZeroPostingsCount < 2) {
-            throw InvalidPostingsException()
+            throw InvalidPostingsException("There must be at least two postings and the total of debits must be equal to credits.")
         }
 
         postings.forEach { postingData ->
@@ -133,20 +130,20 @@ class VoucherService(
 
     private fun validateAccount(accountNumber: String) {
         if (accountService.findAccountByNumber(accountNumber) == null) {
-            throw AccountNotFoundException(accountNumber)
+            throw AccountNotFoundException("No account found with account number = $accountNumber")
         }
     }
 
     private fun validateVatCode(vatCode: String?) {
         if (vatCode != null && !vatService.vatCodeExists(vatCode)) {
-            throw InvalidVatCodeException(vatCode)
+            throw InvalidVatCodeException("Invalid VAT code: $vatCode")
         }
     }
 
     private fun validateBalance(postings: List<CreatePostingPayload>) {
         val totalAmount = postings.sumOf { it.amount }
         if (totalAmount.compareTo(BigDecimal.ZERO) != 0) {
-            throw PostingsNotBalancedException(totalAmount)
+            throw PostingsNotBalancedException("Postings must balance: total amount is $totalAmount")
         }
     }
 

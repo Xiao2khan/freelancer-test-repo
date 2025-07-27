@@ -1,11 +1,10 @@
 package com.respiroc.webapp.controller.web
 
+import com.respiroc.ledger.application.PostingService
 import com.respiroc.ledger.application.payload.BalanceSheetDTO
 import com.respiroc.ledger.application.payload.ProfitLossDTO
-import com.respiroc.ledger.application.PostingService
 import com.respiroc.ledger.domain.model.AccountType
 import com.respiroc.webapp.controller.BaseController
-import com.respiroc.webapp.controller.response.Callout
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.stereotype.Controller
@@ -114,22 +113,17 @@ class ReportHTMXController(
         endDate: LocalDate?,
         model: Model
     ): String {
-        return try {
-            val defaultStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
-            val defaultEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+        val defaultStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+        val defaultEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
 
-            val trialBalanceData = postingService.getTrialBalance(defaultStartDate, defaultEndDate)
+        val trialBalanceData = postingService.getTrialBalance(defaultStartDate, defaultEndDate)
 
-            model.addAttribute(userAttributeName, springUser())
-            model.addAttribute("trialBalanceData", trialBalanceData)
-            model.addAttribute("startDate", defaultStartDate)
-            model.addAttribute("endDate", defaultEndDate)
+        model.addAttribute(userAttributeName, springUser())
+        model.addAttribute("trialBalanceData", trialBalanceData)
+        model.addAttribute("startDate", defaultStartDate)
+        model.addAttribute("endDate", defaultEndDate)
 
-            "report/trial-balance :: tableContent"
-        } catch (e: Exception) {
-            model.addAttribute(calloutAttributeName, Callout.Error("Error loading trial balance: ${e.message}"))
-            "report/trial-balance :: error-message"
-        }
+        return "report/trial-balance :: tableContent"
     }
 
     @GetMapping(value = ["/profit-loss"])
@@ -143,27 +137,23 @@ class ReportHTMXController(
         endDate: LocalDate?,
         model: Model
     ): String {
-        return try {
-            val defaultStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
-            val defaultEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+        val defaultStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+        val defaultEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
 
-            val postingsForProfitLoss = postingService.getPostingsForProfitLoss(defaultStartDate, defaultEndDate)
+        val postingsForProfitLoss = postingService.getPostingsForProfitLoss(defaultStartDate, defaultEndDate)
 
-            model.addAttribute("startDate", defaultStartDate)
-            model.addAttribute("endDate", defaultEndDate)
-            model.addAttribute("assetPostings", postingsForProfitLoss[AccountType.ASSET] ?: ProfitLossDTO(emptyList(), BigDecimal.ZERO))
-            model.addAttribute("revenuePostings", postingsForProfitLoss[AccountType.REVENUE] ?: ProfitLossDTO(emptyList(), BigDecimal.ZERO))
-            model.addAttribute("operatingCostPostings", postingsForProfitLoss[AccountType.EXPENSE] ?: ProfitLossDTO(emptyList(), BigDecimal.ZERO))
+        model.addAttribute("startDate", defaultStartDate)
+        model.addAttribute("endDate", defaultEndDate)
+        model.addAttribute("assetPostings", postingsForProfitLoss[AccountType.ASSET] ?: ProfitLossDTO(emptyList(), BigDecimal.ZERO))
+        model.addAttribute("revenuePostings", postingsForProfitLoss[AccountType.REVENUE] ?: ProfitLossDTO(emptyList(), BigDecimal.ZERO))
+        model.addAttribute("operatingCostPostings", postingsForProfitLoss[AccountType.EXPENSE] ?: ProfitLossDTO(emptyList(), BigDecimal.ZERO))
 
-            "report/profit-loss :: tableContent"
-        } catch (e: Exception) {
-            model.addAttribute(calloutAttributeName, Callout.Error("Error loading profit loss: ${e.message}"))
-            return "report/profit-loss :: error-message"
-        }
+        return "report/profit-loss :: tableContent"
     }
 
-    @GetMapping(value = ["/balance-sheet"], headers = ["HX-Request"])
-    fun balanceSheetHtmx(
+    @GetMapping(value = ["/balance-sheet"])
+    @HxRequest
+    fun balanceSheetHTMX(
         @RequestParam(name = "startDate", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         startDate: LocalDate?,
@@ -172,23 +162,17 @@ class ReportHTMXController(
         endDate: LocalDate?,
         model: Model
     ): String {
-        return try {
+        val defaultStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+        val defaultEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
 
-            val defaultStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
-            val defaultEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+        val postingsForBalanceSheet = postingService.getPostingsForBalanceSheet(defaultStartDate, defaultEndDate)
 
-            val postingsForBalanceSheet = postingService.getPostingsForBalanceSheet(defaultStartDate, defaultEndDate)
+        model.addAttribute("startDate", defaultStartDate)
+        model.addAttribute("endDate", defaultEndDate)
+        model.addAttribute("assetPostings", postingsForBalanceSheet[AccountType.ASSET] ?: BalanceSheetDTO(emptyList(),BigDecimal.ZERO))
+        model.addAttribute("equityPostings", postingsForBalanceSheet[AccountType.EQUITY] ?: BalanceSheetDTO(emptyList(), BigDecimal.ZERO))
+        model.addAttribute("liabilityPostings", postingsForBalanceSheet[AccountType.LIABILITY] ?: BalanceSheetDTO(emptyList(), BigDecimal.ZERO))
 
-            model.addAttribute("startDate", defaultStartDate)
-            model.addAttribute("endDate", defaultEndDate)
-            model.addAttribute("assetPostings", postingsForBalanceSheet[AccountType.ASSET] ?: BalanceSheetDTO(emptyList(),BigDecimal.ZERO))
-            model.addAttribute("equityPostings", postingsForBalanceSheet[AccountType.EQUITY] ?: BalanceSheetDTO(emptyList(), BigDecimal.ZERO))
-            model.addAttribute("liabilityPostings", postingsForBalanceSheet[AccountType.LIABILITY] ?: BalanceSheetDTO(emptyList(), BigDecimal.ZERO))
-
-            "report/balance-sheet :: tableContent"
-        } catch (e: Exception) {
-            model.addAttribute(calloutAttributeName, Callout.Error("Error loading balance sheet: ${e.message}"))
-            return "report/balance-sheet :: error-message"
-        }
+        return "report/balance-sheet :: tableContent"
     }
 }

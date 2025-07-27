@@ -28,13 +28,8 @@ class CompanyHTMXController(
             return "fragments/company-search :: empty"
         }
 
-        try {
-            val searchResult = companyLookupApi.search(query, countryCode)
-            model.addAttribute("companies", searchResult.companies.take(10))
-            return "fragments/company-search :: results"
-        } catch (e: Exception) {
-            model.addAttribute(errorMessageAttributeName, "Search failed: ${e.message}")
-            return "fragments/company-search :: error"
-        }
+        val searchResult = companyLookupApi.search(query, countryCode)
+        model.addAttribute("companies", searchResult.companies.take(10))
+        return "fragments/company-search :: results"
     }
 }

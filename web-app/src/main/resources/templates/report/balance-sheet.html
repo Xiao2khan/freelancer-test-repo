@@ -21,8 +21,9 @@
                                   id="startDate"
                                   name="startDate"
                                   th:value="${startDate}"
-                                  th:hx-get="'/report/profit-loss'"
+                                  th:hx-get="'/htmx/report/balance-sheet'"
                                   th:hx-target="'#content-area'"
+                                  th:hx-target-error="'#r-callout'"
                                   th:hx-indicator="'#loading-indicator'"
                                   th:hx-swap="'innerHTML'"
                                   th:hx-trigger="'change'"
@@ -36,12 +37,13 @@
                                   id="endDate"
                                   name="endDate"
                                   th:value="${endDate}"
-                                  th:hx-get="'/report/profit-loss'"
-                                  th:x-target="'#content-area'"
-                                  th:x-indicator="'#loading-indicator'"
-                                  th:x-swap="'innerHTML'"
-                                  th:x-trigger="'change'"
-                                  th:x-include="'[name=\'startDate\']'"></wa-input>
+                                  th:hx-get="'/htmx/report/balance-sheet'"
+                                  th:hx-target="'#content-area'"
+                                  th:hx-target-error="'#r-callout'"
+                                  th:hx-indicator="'#loading-indicator'"
+                                  th:hx-swap="'innerHTML'"
+                                  th:hx-trigger="'change'"
+                                  th:hx-include="'[name=\'startDate\']'"></wa-input>
                     </div>
 
 

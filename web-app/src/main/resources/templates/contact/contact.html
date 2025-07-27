@@ -10,10 +10,11 @@
     <div>
         <div class="wa-split wa-gap-s">
             <form th:hx-get="@{/htmx/contact/{type}/search(type=${type.toLowerCase()})}"
-                  hx-trigger="keyup changed delay:500ms"
-                  hx-target="#customer-table"
-                  hx-indicator="#loading-indicator"
-                  hx-swap="innerHTML">
+                  th:hx-trigger="'keyup changed delay:500ms'"
+                  th:hx-target="'#customer-table'"
+                  th:hx-target-error="'#r-callout'"
+                  th:hx-indicator="'#loading-indicator'"
+                  th:hx-swap="'innerHTML'">
                 <wa-input th:placeholder="|#{contact.search} ${type}|" size="small" name="name" type="text"
                           id="search-input">
                     <wa-icon name="search" slot="start"></wa-icon>

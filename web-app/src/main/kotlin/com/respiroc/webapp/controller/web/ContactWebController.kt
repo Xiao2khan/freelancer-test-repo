@@ -14,7 +14,6 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.*
 import java.util.Locale.getDefault
 
-
 @Controller
 @RequestMapping(value = ["/contact"])
 class ContactWebController(

@@ -24,10 +24,11 @@
                     size="small"
                     variant="danger"
                     th:hx-target="'#row-' + ${contact.id}"
+                    th:hx-target-error="'#r-callout'"
                     th:hx-delete="@{/contact/{type}/{id}(id=${contact.id}, type=${type.toLowerCase()})}"
                     th:hx-indicator="'#loading-indicator-' + ${contact.id}"
                     hx-disabled-elt="this"
-                    hx-swap="outerHTML swap:0.5s"
+                    hx-swap="innerHTML swap:0.5s"
                     th:text="#{contact.table.delete}"
                     th:hx-confirm="#{contact.table.delete_confirm}">
             </wa-button>

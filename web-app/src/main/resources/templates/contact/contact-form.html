@@ -14,10 +14,11 @@
                 <form id="createContactForm"
                       th:object="${contact}"
                       th:hx-post="@{/htmx/contact/{type}(type=${type.toLowerCase()})}"
-                      hx-indicator="#loading-indicator"
-                      hx-disabled-elt="#submitButton"
+                      th:hx-indicator="'#loading-indicator'"
+                      th:hx-disabled-elt="'#submitButton'"
+                      th:hx-target-error="'#r-callout'"
                       class="wa-grid" style="--min-column-size: 1000px;"
-                      hx-swap="outerHTML">
+                      th:hx-swap="'innerHTML'">
                     <div>
                         <wa-radio-group
                                 required
@@ -26,8 +27,9 @@
                                 th:label="|#{contact.private} ${type}|"
                                 th:value="${contact.privateContact}"
                                 th:hx-get="@{/htmx/contact/{type}/new(type=${type.toLowerCase()})}"
-                                hx-target="#contactFormFields"
-                                hx-trigger="change"
+                                th:hx-target="'#contactFormFields'"
+                                th:hx-target-error="'#r-callout'"
+                                th:hx-trigger="'change'"
                         >
                             <wa-radio value="false" th:text="#{contact.company}"></wa-radio>
                             <wa-radio value="true" th:text="#{contact.private_person}"></wa-radio>
@@ -46,10 +48,11 @@
                                     size="medium"
                                     required
                                     autocomplete="off"
-                                    hx-get="/htmx/company/search"
-                                    hx-trigger="input changed delay:200ms"
-                                    hx-target="#name-dropdown"
-                                    hx-swap="outerHTML">
+                                    th:hx-get="@{/htmx/company/search}"
+                                    th:hx-trigger="'input changed delay:200ms'"
+                                    th:hx-target="'#name-dropdown'"
+                                    th:hx-target-error="'#r-callout'"
+                                    th:hx-swap="'innerHTML'">
                             </wa-input>
                             <div id="name-dropdown"></div>
                             <wa-input

@@ -1,4 +1,4 @@
-package com.respiroc.webapp
+package com.respiroc.attachment.application
 
 import com.itextpdf.io.image.ImageDataFactory
 import com.itextpdf.kernel.geom.PageSize
@@ -7,43 +7,13 @@ import com.itextpdf.kernel.pdf.PdfWriter
 import com.itextpdf.kernel.pdf.WriterProperties
 import com.itextpdf.layout.Document
 import com.itextpdf.layout.element.Image
-import com.respiroc.util.repository.CustomJpaRepository
-import jakarta.persistence.*
-import org.hibernate.annotations.CreationTimestamp
-import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.time.Instant
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
 import javax.imageio.ImageWriteParam
-
-
-@Entity
-@Table(name = "attachments")
-class Attachment {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
-
-    @Column(name = "file_data", nullable = false, columnDefinition = "BYTEA")
-    lateinit var fileData: ByteArray
-
-    @Column(name = "filename", nullable = false)
-    lateinit var filename: String
-
-    @Column(name = "mimetype", nullable = false)
-    lateinit var mimetype: String
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false)
-    var createdAt: Instant? = null
-}
-
-@Repository
-interface AttachmentRepository : CustomJpaRepository<Attachment, Long>
 
 
 @Service
@@ -96,7 +66,7 @@ class AttachmentService {
         }
 
         document.add(image)
-        document.close()                         // flush & close everything
+        document.close() // flush & close everything
 
         return Triple(pdfBaos.toByteArray(), ensurePdfExt(filename), "application/pdf")
     }
@@ -136,7 +106,6 @@ class AttachmentService {
             return baos.toByteArray()
         }
     }
-
 
     private fun ensurePdfExt(name: String): String =
         if (name.lowercase().endsWith(".pdf")) name else "${name.substringBeforeLast('.', name)}.pdf"

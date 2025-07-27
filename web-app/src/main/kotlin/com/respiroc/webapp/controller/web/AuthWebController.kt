@@ -66,23 +66,15 @@ class AuthHTMXController(
     @HxRequest
     fun loginHTMX(
         @ModelAttribute loginRequest: LoginRequest,
-        response: HttpServletResponse,
-        model: Model
+        response: HttpServletResponse
     ): String {
-        try {
-            val result = userService.loginByEmailPassword(
-                email = loginRequest.email,
-                password = loginRequest.password
-            )
-
-            val token = jwt.generateToken(subject = result.id.toString(), tenantId = result.tenantId)
-            setJwtCookie(token, response)
-            return "redirect:htmx:/"
-        } catch (e: Exception) {
-            e.printStackTrace()
-            model.addAttribute(errorMessageAttributeName, "Invalid email or password")
-            return "fragments/error-message"
-        }
+        val result = userService.loginByEmailPassword(
+            email = loginRequest.email,
+            password = loginRequest.password
+        )
+        val token = jwt.generateToken(subject = result.id.toString(), tenantId = result.tenantId)
+        setJwtCookie(token, response)
+        return "redirect:htmx:/"
     }
 
     @PostMapping("/signup")
@@ -92,19 +84,13 @@ class AuthHTMXController(
         response: HttpServletResponse,
         model: Model
     ): String {
-        try {
-            val result = userService.signupByEmailPassword(
-                signupRequest.email,
-                signupRequest.password
-            )
-
-            val token = jwt.generateToken(subject = result.id.toString(), tenantId = result.tenantId)
-            setJwtCookie(token, response)
-            return "redirect:htmx:/"
-        } catch (e: Exception) {
-            model.addAttribute(errorMessageAttributeName, e.message ?: "An error occurred during registration")
-            return "fragments/error-message"
-        }
+        val result = userService.signupByEmailPassword(
+            signupRequest.email,
+            signupRequest.password
+        )
+        val token = jwt.generateToken(subject = result.id.toString(), tenantId = result.tenantId)
+        setJwtCookie(token, response)
+        return "redirect:htmx:/"
     }
 
     @PostMapping("/select-tenant")

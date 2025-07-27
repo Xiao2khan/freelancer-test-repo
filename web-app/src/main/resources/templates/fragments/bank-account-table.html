@@ -20,10 +20,11 @@
                     size="small"
                     variant="danger"
                     th:hx-target="'#row-' + ${account.id}"
+                    th:hx-target-error="'#r-callout'"
                     th:hx-delete="@{/bank/account/{id}(id=${account.id})}"
                     th:hx-indicator="'#loading-indicator-' + ${account.id}"
                     hx-disabled-elt="this"
-                    hx-swap="outerHTML swap:0.5s"
+                    hx-swap="innerHTML swap:0.5s"
                     th:text="#{bank_account.table.delete}"
                     th:hx-confirm="#{bank_account.table.delete_confirm}">
             </wa-button>

@@ -3,7 +3,6 @@ package com.respiroc.webapp.controller.web
 import com.respiroc.ledger.application.AccountService
 import com.respiroc.ledger.application.PostingService
 import com.respiroc.webapp.controller.BaseController
-import com.respiroc.webapp.controller.response.Callout
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.stereotype.Controller
@@ -32,26 +31,21 @@ class LedgerWebController(
         accountNumber: String?,
         model: Model
     ): String {
-        return try {
-            val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
-            val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+        val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+        val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
 
-            val generalLedgerData = postingService.getGeneralLedger(effectiveStartDate, effectiveEndDate, accountNumber)
+        val generalLedgerData = postingService.getGeneralLedger(effectiveStartDate, effectiveEndDate, accountNumber)
 
-            model.addAttribute("generalLedgerData", generalLedgerData)
-            model.addAttribute("startDate", effectiveStartDate)
-            model.addAttribute("endDate", effectiveEndDate)
-            model.addAttribute("selectedAccountNumber", accountNumber)
+        model.addAttribute("generalLedgerData", generalLedgerData)
+        model.addAttribute("startDate", effectiveStartDate)
+        model.addAttribute("endDate", effectiveEndDate)
+        model.addAttribute("selectedAccountNumber", accountNumber)
 
-            addCommonAttributesForCurrentTenant(model, "General Ledger")
-            val accounts = accountService.findAllAccounts().sortedBy { it.noAccountNumber }
-            model.addAttribute("accounts", accounts)
+        addCommonAttributesForCurrentTenant(model, "General Ledger")
+        val accounts = accountService.findAllAccounts().sortedBy { it.noAccountNumber }
+        model.addAttribute("accounts", accounts)
 
-            "ledger/general"
-        } catch (e: Exception) {
-            model.addAttribute(calloutAttributeName, Callout.Error("Error loading general ledger: ${e.message}"))
-            "ledger/general"
-        }
+        return "ledger/general"
     }
 
     @GetMapping(value = ["/chart-of-accounts"])
@@ -81,23 +75,18 @@ class LedgerHTMXController(
         accountNumber: String?,
         model: Model
     ): String {
-        return try {
-            val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
-            val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+        val effectiveStartDate = startDate ?: LocalDate.now().withDayOfMonth(1)
+        val effectiveEndDate = endDate ?: LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
 
-            val generalLedgerData = postingService.getGeneralLedger(effectiveStartDate, effectiveEndDate, accountNumber)
+        val generalLedgerData = postingService.getGeneralLedger(effectiveStartDate, effectiveEndDate, accountNumber)
 
-            model.addAttribute("generalLedgerData", generalLedgerData)
-            model.addAttribute("startDate", effectiveStartDate)
-            model.addAttribute("endDate", effectiveEndDate)
-            model.addAttribute("selectedAccountNumber", accountNumber)
-            model.addAttribute(userAttributeName, springUser())
-            model.addAttribute("companyCurrency", countryCode())
+        model.addAttribute("generalLedgerData", generalLedgerData)
+        model.addAttribute("startDate", effectiveStartDate)
+        model.addAttribute("endDate", effectiveEndDate)
+        model.addAttribute("selectedAccountNumber", accountNumber)
+        model.addAttribute(userAttributeName, springUser())
+        model.addAttribute("companyCurrency", countryCode())
 
-            "ledger/general :: tableContent"
-        } catch (e: Exception) {
-            model.addAttribute(calloutAttributeName, Callout.Error("Error loading general ledger: ${e.message}"))
-            "ledger/general :: error-message"
-        }
+        return "ledger/general :: tableContent"
     }
 }
