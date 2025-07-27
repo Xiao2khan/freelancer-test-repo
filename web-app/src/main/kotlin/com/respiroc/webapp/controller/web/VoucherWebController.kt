@@ -5,6 +5,7 @@ import com.respiroc.ledger.application.VoucherService
 import com.respiroc.webapp.constant.ShortcutRegistry
 import com.respiroc.webapp.constant.ShortcutScreen
 import com.respiroc.util.currency.CurrencyService
+import com.respiroc.webapp.config.annotation.REQUIRE_PERMISSION_ALL_WRITE
 import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.controller.request.CreateVoucherRequest
 import com.respiroc.webapp.controller.response.Callout
@@ -135,6 +136,7 @@ class VoucherHTMXController(
         }
     }
 
+    @REQUIRE_PERMISSION_ALL_WRITE
     @PostMapping("/update/{voucherId}")
     @HxRequest
     fun updateVoucherHTMX(
