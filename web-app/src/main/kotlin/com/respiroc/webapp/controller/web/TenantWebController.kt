@@ -2,6 +2,7 @@ package com.respiroc.webapp.controller.web
 
 import com.respiroc.companylookup.api.CompanyLookupInternalApi
 import com.respiroc.user.application.UserService
+import com.respiroc.util.exception.UnauthorizedException
 import com.respiroc.util.payload.CreateCompanyPayload
 import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.controller.request.CreateCompanyRequest
@@ -20,6 +21,12 @@ class TenantWebController : BaseController() {
 
     @GetMapping("/create")
     fun createCompany(model: Model): String {
+
+        val hasOwnerRole = hasOwnerRole()
+        if (!hasOwnerRole) {
+            throw UnauthorizedException("Only users with the Owner role can create new company")
+        }
+
         model.addAttribute("createCompanyRequest", CreateCompanyRequest("", "", "NO"))
 
         try {
@@ -58,6 +65,11 @@ class TenantHTMXController(
         }
 
         try {
+            val hasOwnerRole = hasOwnerRole()
+            if (!hasOwnerRole) {
+                throw UnauthorizedException("Only users with the Owner role can create new company")
+            }
+
             val companyInfo =
                 companyLookupApi.getInfo(createCompanyRequest.organizationNumber, createCompanyRequest.countryCode)
             val companyAddress = companyInfo.address

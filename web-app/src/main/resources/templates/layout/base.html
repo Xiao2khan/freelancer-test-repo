@@ -37,11 +37,14 @@
 
                     <span th:text="${tenant.companyName}" />
                 </wa-dropdown-item>
-                <wa-divider></wa-divider>
-                <wa-dropdown-item onclick="window.open('/tenant/create')">
-                    <wa-icon slot="icon" name="plus"></wa-icon>
-                    <span th:text="#{layout.company.selector.create}" />
-                </wa-dropdown-item>
+                <div th:if="${hasTenantOwnerRole}">
+                    <wa-divider></wa-divider>
+                    <wa-dropdown-item  onclick="window.open('/tenant/create')">
+                        <wa-icon slot="icon" name="plus"></wa-icon>
+                        <span th:text="#{layout.company.selector.create}" />
+                    </wa-dropdown-item>
+                </div>
+
             </wa-dropdown>
         </div>
         <div class="wa-cluster wa-gap-xs">
