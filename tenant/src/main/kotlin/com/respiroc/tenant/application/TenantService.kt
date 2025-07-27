@@ -41,6 +41,15 @@ class TenantService(
         return tenantRepository.findBySlug(slug)
     }
 
+    /**
+     * Find a tenant by ID
+     */
+    fun findTenantById(id: Long): Tenant {
+        return tenantRepository.findById(id).orElseThrow {
+            IllegalArgumentException("Tenant with ID $id not found")
+        }
+    }
+
     fun findTenantRoleByCode(role: TenantRoleCode): TenantRole {
         return tenantRoleRepository.findByCode(role.code)
     }

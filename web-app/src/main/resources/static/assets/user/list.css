@@ -1,0 +1,8 @@
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--wa-font-size-s);
+    max-width: 100%;
+    overflow-y: auto;
+    padding: 0.25rem;
+}

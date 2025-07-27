@@ -4,7 +4,10 @@ import com.respiroc.tenant.application.TenantService
 import com.respiroc.tenant.domain.model.Tenant
 import com.respiroc.tenant.domain.model.TenantPermission
 import com.respiroc.tenant.domain.model.TenantRole
+import com.respiroc.user.application.payload.CreateUserDTO
 import com.respiroc.user.application.payload.LoginPayload
+import com.respiroc.user.application.payload.UpdateUserDTO
+import com.respiroc.user.application.payload.UserDTO
 import com.respiroc.user.domain.model.*
 import com.respiroc.user.domain.repository.UserRepository
 import com.respiroc.user.domain.repository.UserTenantRepository
@@ -12,6 +15,7 @@ import com.respiroc.user.domain.repository.UserTenantRoleRepository
 import com.respiroc.util.constant.TenantRoleCode
 import com.respiroc.util.context.*
 import com.respiroc.util.currency.CurrencyService
+import com.respiroc.util.exception.UnauthorizedException
 import com.respiroc.util.payload.CreateCompanyPayload
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker
 import org.springframework.security.authentication.BadCredentialsException
@@ -19,9 +23,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.nio.file.attribute.UserPrincipalNotFoundException
 import java.time.Instant
 import kotlin.jvm.optionals.getOrNull
+import kotlin.collections.listOf
 
 @Service
 @Transactional
@@ -34,6 +38,175 @@ class UserService(
 ) {
 
     private val passwordEncoder = BCryptPasswordEncoder()
+
+    /**
+     * Create a new user with email, password, and role
+     * Only users with the Owner role can create new users
+     */
+    fun createUser(createUserDTO: CreateUserDTO, tenantId: Long, hasOwnerRole: Boolean): UserDTO {
+
+        if (!hasOwnerRole) {
+            throw UnauthorizedException("Only users with the Owner role can create new users")
+        }
+
+        // Check if user with the same email already exists
+        val existingUser = userRepository.findByEmail(createUserDTO.email)
+        if (existingUser != null) {
+            throw IllegalArgumentException("User with email ${createUserDTO.email} already exists")
+        }
+
+        // Create the new user
+        val newUser = User()
+        newUser.email = createUserDTO.email
+        newUser.passwordHash = passwordEncoder.encode(createUserDTO.password)
+        newUser.lastTenantId = tenantId
+        val savedUser = userRepository.save(newUser)
+
+        // Assign the role to the user
+        val tenantRole = tenantService.findTenantRoleByCode(TenantRoleCode.valueOf(createUserDTO.tenantRoleCode))
+        val tenant = tenantService.findTenantById(tenantId)
+
+        // Create a UserContext for the new user
+        val userContext = UserContext(
+            id = savedUser.id,
+            email = savedUser.email,
+            password = savedUser.passwordHash,
+            isEnabled = savedUser.isEnabled,
+            isLocked = savedUser.isLocked,
+            currentTenant = null,
+            tenants = emptyList(),
+            roles = emptyList()
+        )
+
+        addUserTenantRole(tenant, tenantRole, userContext)
+
+        // Return the user DTO
+        return getUserById(savedUser.id, tenantId)
+    }
+
+    fun listUserManagement(currentUserId: Long, tenantId: Long, hasOwnerRole: Boolean): List<UserDTO> {
+        if (hasOwnerRole) {
+            return getAllUsers(tenantId)
+        } else {
+            return listOf(getUserById(currentUserId, tenantId))
+        }
+    }
+
+    /**
+     * Get all users for a tenant
+     */
+    fun getAllUsers(tenantId: Long): List<UserDTO> {
+        val userTenants = userTenantRepository.findAllByTenantId(tenantId)
+        return userTenants.map { userTenant: UserTenant ->
+            val user = userRepository.findById(userTenant.userId).orElseThrow {
+                IllegalArgumentException("User with ID ${userTenant.userId} not found")
+            }
+            UserDTO(
+                id = user.id,
+                email = user.email,
+                isEnabled = user.isEnabled,
+                isLocked = user.isLocked,
+                lastLoginAt = user.lastLoginAt,
+                createdAt = user.createdAt,
+                updatedAt = user.updatedAt,
+                tenantRoles = findTenantRoles(user.id, tenantId)
+            )
+        }
+    }
+
+    /**
+     * Get a user by ID
+     */
+    fun getUserById(userId: Long, tenantId: Long): UserDTO {
+        val user = userRepository.findById(userId).orElseThrow {
+            IllegalArgumentException("User with ID $userId not found")
+        }
+
+        return UserDTO(
+            id = user.id,
+            email = user.email,
+            isEnabled = user.isEnabled,
+            isLocked = user.isLocked,
+            lastLoginAt = user.lastLoginAt,
+            createdAt = user.createdAt,
+            updatedAt = user.updatedAt,
+            tenantRoles = findTenantRoles(user.id, tenantId)
+        )
+    }
+
+    /**
+     * Update a user
+     * Only users with the Owner role can update users
+     */
+    fun updateUser(updateUserDTO: UpdateUserDTO, currentUser: UserContext, tenantId: Long): UserDTO {
+        // Check if the current user has the Owner role
+        val hasOwnerRole = currentUser.currentTenant?.roles?.any {
+            it.code == TenantRoleCode.OWNER.code
+        } ?: false
+
+        if (!hasOwnerRole) {
+            throw UnauthorizedException("Only users with the Owner role can update users")
+        }
+
+        // Get the user to update
+        val user = userRepository.findById(updateUserDTO.id).orElseThrow {
+            IllegalArgumentException("User with ID ${updateUserDTO.id} not found")
+        }
+
+        // Update the user
+        user.apply {
+            email = updateUserDTO.email
+            isEnabled = updateUserDTO.isEnabled
+            isLocked = updateUserDTO.isLocked
+
+            // Update password if provided
+            updateUserDTO.password?.takeUnless { it.isBlank() }?.let {
+                passwordHash = passwordEncoder.encode(it)
+            }
+        }
+
+        val savedUser = userRepository.save(user)
+
+        // Update the user's role if provided
+        if (updateUserDTO.tenantRoleCode != null) {
+            // Get the current tenant roles for the user
+            val currentTenantRoles = findTenantRoles(user.id, tenantId)
+            val currentRoleCode = currentTenantRoles.firstOrNull()?.code
+
+            // Only update if the role is actually changing
+            if (updateUserDTO.tenantRoleCode != currentRoleCode) {
+                // Get the tenant role
+                val tenantRole = tenantService.findTenantRoleByCode(TenantRoleCode.valueOf(updateUserDTO.tenantRoleCode))
+                val tenant = tenantService.findTenantById(tenantId)
+
+                // Get the user tenant
+                val userTenant = getOrCreateUserTenant(user.id, tenantId)
+
+                // Remove existing tenant roles for this user in this tenant
+                userTenant.roles.toList().forEach { role ->
+                    userTenantRoleRepository.delete(role)
+                }
+
+                // Create a UserContext for the user
+                val userContext = UserContext(
+                    id = user.id,
+                    email = user.email,
+                    password = user.passwordHash,
+                    isEnabled = user.isEnabled,
+                    isLocked = user.isLocked,
+                    currentTenant = null,
+                    tenants = emptyList(),
+                    roles = emptyList()
+                )
+
+                // Add the new role
+                addUserTenantRole(tenant, tenantRole, userContext)
+            }
+        }
+
+        // Return the updated user DTO
+        return getUserById(savedUser.id, tenantId)
+    }
 
     fun signupByEmailPassword(email: String, password: String): LoginPayload {
         val existUser = userRepository.findByEmail(email)
@@ -68,12 +241,16 @@ class UserService(
     }
 
     fun findTenantRoles(userId: Long, tenantId: Long): List<TenantRoleContext> {
-        // TODO : There is bug here: Collection has more than one element. There is more than one tenant
-        return userRepository.findUserWithTenantRoles(userId, tenantId)!!
-            .userTenants.single { it.tenantId == tenantId }
-            .roles.map {
-                it.tenantRole.toTenantRoleContext()
-            }
+        // Get the user with tenant roles
+        val user = userRepository.findUserWithTenantRoles(userId, tenantId) ?: return emptyList()
+
+        // Find the UserTenant with the specified tenantId, or return empty list if not found
+        val userTenant = user.userTenants.singleOrNull { it.tenantId == tenantId } ?: return emptyList()
+
+        // Map the roles to TenantRoleContext objects
+        return userTenant.roles.map {
+            it.tenantRole.toTenantRoleContext()
+        }
     }
 
     fun createTenantForUser(payload: CreateCompanyPayload, user: UserContext): Tenant {
@@ -90,7 +267,7 @@ class UserService(
         user: UserContext
     ) {
         val userTenant = getOrCreateUserTenant(user.id, tenant.id)
-        val userTenantRoleId = UserTenantRoleId(tenant.id, user.id)
+        val userTenantRoleId = UserTenantRoleId(userTenant.id, role.id)
         val userTenantRole = UserTenantRole(userTenantRoleId, userTenant, role)
         userTenantRoleRepository.save(userTenantRole)
     }

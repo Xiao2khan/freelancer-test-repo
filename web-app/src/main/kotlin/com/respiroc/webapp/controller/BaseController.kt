@@ -1,5 +1,6 @@
 package com.respiroc.webapp.controller
 
+import com.respiroc.util.constant.TenantRoleCode
 import com.respiroc.util.context.SpringUser
 import com.respiroc.util.context.TenantInfo
 import com.respiroc.util.context.UserContext
@@ -19,6 +20,7 @@ open class BaseController {
     val tenantsAttributeName: String = "tenants"
     val currentTenantAttributeName: String = "currentTenant"
     val calloutAttributeName: String = "callout"
+    val hasTenantOwnerAttributeName: String = "hasTenantOwnerRole"
 
     companion object {
         private const val JWT_TOKEN_PERIOD = 24 * 60 * 60
@@ -48,6 +50,13 @@ open class BaseController {
         return user().currentTenant?.countryCode ?: throw IllegalStateException("No current tenant is set for the user")
     }
 
+    fun hasOwnerRole(): Boolean {
+        return user().currentTenant?.roles?.any {
+            it.code == TenantRoleCode.OWNER.code
+        } ?: false
+    }
+
+
     fun addCommonAttributesForCurrentTenant(
         model: Model,
         title: String,
@@ -55,11 +64,12 @@ open class BaseController {
         val springUser = springUser()
         val currentTenant = currentTenant()
         val tenants = tenants()
-
+        val hasTenantOwnerRole = hasOwnerRole()
         model.addAttribute(userAttributeName, springUser)
         model.addAttribute(currentTenantAttributeName, currentTenant)
         model.addAttribute(tenantsAttributeName, tenants)
         model.addAttribute(titleAttributeName, "${currentTenant.companyName} - $title")
+        model.addAttribute(hasTenantOwnerAttributeName, hasTenantOwnerRole)
     }
 
     fun addCommonAttributes(

@@ -1,0 +1,94 @@
+<th:block th:fragment="createUserDialog">
+    <wa-dialog id="create-user-dialog" th:label="#{user_management.create_user}">
+        <div class="wa-stack wa-gap-m">
+            <div id="create-callout-container"></div>
+            <form id="createUserForm" class="wa-stack wa-gap-m"
+                  hx-post="/htmx/user/create"
+                  hx-target="#user-table-container"
+                  hx-swap="innerHTML">
+                <div class="wa-stack wa-gap-s">
+                    <wa-input th:label="#{user_management.dialog.email_label}"
+                              type="email"
+                              id="createEmail"
+                              name="email"
+                              required>
+                    </wa-input>
+                    <wa-input th:label="#{user_management.dialog.password_label}"
+                              type="password"
+                              id="createPassword"
+                              name="password"
+                              required>
+                    </wa-input>
+                    <wa-select id="createRoleCode"
+                               name="tenantRoleCode"
+                               th:label="#{user_management.dialog.role_label}"
+                               required>
+                        <wa-option th:each="role : ${tenantRoles}" th:value="${role.code}" th:text="${role.name()}"></wa-option>
+                    </wa-select>
+                </div>
+
+                <div slot="footer" class="wa-cluster wa-split wa-gap-s">
+                    <wa-button variant="neutral" data-dialog="close" th:text="#{user_management.button.cancel}">
+                    </wa-button>
+                    <wa-button type="submit" variant="brand" th:text="#{user_management.create_user}">
+                    </wa-button>
+                </div>
+            </form>
+        </div>
+    </wa-dialog>
+</th:block>
+
+<div th:fragment="editUserDialog">
+    <wa-dialog id="editUserDialog" th:label="#{user_management.update_user}" open>
+        <div class="wa-stack wa-gap-m">
+            <div id="edit-callout-container"></div>
+            <form id="editUserForm" class="wa-stack wa-gap-m"
+                  th:hx-post="@{/htmx/user/{id}/update(id=${updateUserRequest.id})}"
+                  hx-target="#user-table-container"
+                  hx-swap="innerHTML">
+                <div class="wa-stack wa-gap-s">
+                    <input type="hidden" name="id" th:value="${updateUserRequest.id}">
+                    <wa-input type="email"
+                              id="editEmail"
+                              name="email"
+                              th:label="#{user_management.dialog.email_label}"
+                              th:value="${updateUserRequest.email}"
+                              disabled>
+                    </wa-input>
+                    <wa-select id="editRoleCode"
+                               name="tenantRoleCode"
+                               th:label="#{user_management.dialog.role_label}"
+                               th:value="${updateUserRequest.tenantRoleCode}"
+                               th:if="${!updateUserRequest.hasTenantOwnerRole}">
+                        <wa-option th:each="role : ${tenantRoles}" th:value="${role.code}" th:text="${role.name()}"></wa-option>
+                    </wa-select>
+                    <wa-input type="password"
+                              id="editPassword"
+                              name="password"
+                              th:label="#{user_management.dialog.update_password_label}">
+                    </wa-input>
+                    <div class="wa-stack wa-gap-xs" th:if="${!updateUserRequest.hasTenantOwnerRole}">
+                        <wa-checkbox id="isEnabled"
+                                     name="isEnabled"
+                                     th:checked="${updateUserRequest.isEnabled}"
+                                     th:text="#{user_management.enabled}">
+                        </wa-checkbox>
+                        <wa-checkbox id="isLocked"
+                                     name="isLocked"
+                                     th:checked="${updateUserRequest.isLocked}"
+                                     th:text="#{user_management.locked}">
+                        </wa-checkbox>
+                    </div>
+                </div>
+                <div slot="footer" class="wa-cluster wa-split wa-gap-s">
+                    <wa-button variant="neutral" data-dialog="close" th:text="#{user_management.button.cancel}">
+                    </wa-button>
+                    <wa-button type="submit" variant="brand" th:text="#{user_management.update_user}">
+                    </wa-button>
+                </div>
+            </form>
+        </div>
+    </wa-dialog>
+</div>
+
+

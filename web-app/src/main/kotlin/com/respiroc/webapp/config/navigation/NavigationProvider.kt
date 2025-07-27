@@ -12,6 +12,13 @@ class NavigationProvider {
             ),
 
             NavigationSection(
+                title = "Users", icon = "file-text",
+                items = listOf(
+                    NavigationSectionItem(label = "User Manage", url = "/user"),
+                )
+            ),
+
+            NavigationSection(
                 title = "Vouchers", icon = "file-text",
                 items = listOf(
                     NavigationSectionItem(label = "Overview", url = "/voucher/overview"),

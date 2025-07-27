@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="#{user_management.title}"></title>
+</head>
+<body>
+<main layout:fragment="content">
+    <div th:replace="user/dialog :: createUserDialog"></div>
+
+    <div class="wa-container">
+        <div class="wa-stack wa-gap-s">
+            <div class="wa-cluster wa-justify-between wa-items-center">
+                <h1 class="wa-heading-l" th:text="#{user_management.title}"></h1>
+                <wa-button class="btn btn-primary"
+                           id="create-user-button"
+                           onclick="document.getElementById('create-user-dialog').open = true"
+                           th:text="#{user_management.create_user}"
+                           th:if="${canCreateUser}">
+                </wa-button>
+
+                <wa-button class="btn btn-sm btn-primary"
+                           hx-get="/htmx/user/list"
+                           hx-target="#user-table-container"
+                           hx-swap="innerHTML"
+                           th:text="#{user_management.button.refresh}">
+                </wa-button>
+            </div>
+
+            <!-- Modal Container -->
+            <div id="modal-container"></div>
+
+            <wa-card>
+                <div class="wa-stack wa-gap-m">
+                    <div id="user-table-container" th:fragment="userTable">
+                        <wa-progress-bar id="loading-indicator" indeterminate class="htmx-indicator"></wa-progress-bar>
+
+                        <div th:if="${#lists.isEmpty(users)}" class="wa-center">
+                            <div class="wa-stack wa-gap-m wa-center">
+                                <wa-icon name="users" style="font-size: 2rem; opacity: 0.5;"></wa-icon>
+                                <h3 class="wa-heading-m" th:text="#{user_management.no_data_mess}"></h3>
+                            </div>
+                        </div>
+
+                        <wa-scroller th:unless="${#lists.isEmpty(users)}">
+                            <table id="dataTable" class="user-table">
+                                <thead>
+                                <tr>
+                                    <th class="w-25" th:text="#{user_management.table.email}"></th>
+                                    <th class="w-20" th:text="#{user_management.table.status}"></th>
+                                    <th class="w-20" th:text="#{user_management.table.roles}"></th>
+                                    <th class="w-20" th:text="#{user_management.table.last_login}"></th>
+                                    <th th:if="${canCreateUser}" class="w-15" th:text="#{user_management.table.action}"></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="user : ${users}">
+                                    <td>
+                                        <span class="wa-body" th:text="${user.email}">user@example.com</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${user.isEnabled}" class="badge badge-success" th:text="#{user_management.enabled}"></span>
+                                        <span th:unless="${user.isEnabled}" class="badge badge-secondary" th:text="#{user_management.disabled}"></span>
+                                        <span th:if="${user.isLocked}" class="badge badge-danger ml-1" th:text="#{user_management.locked}"></span>
+                                    </td>
+                                    <td>
+                                        <span th:each="role, iterStat : ${user.tenantRoles}" class="badge badge-info mr-1"
+                                              th:text="${role.name}"></span>
+                                    </td>
+                                    <td>
+                                        <span class="wa-body" th:text="${user.lastLoginAt != null ? #temporals.format(user.lastLoginAt, 'yyyy-MM-dd HH:mm') : 'Never'}">
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <wa-button class="btn btn-sm btn-primary"
+                                                th:hx-get="@{/htmx/user/{id}/edit-modal(id=${user.id})}"
+                                                hx-target="#modal-container"
+                                                hx-swap="innerHTML"
+                                                hx-indicator="#loading-indicator"
+                                                th:if="${canCreateUser}"
+                                                th:text="#{user_management.button.edit}">
+                                        </wa-button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                                <tfoot>
+                                <tr th:if="${canCreateUser}" style="border-top: 2px solid #e0e0e0;">
+                                    <td colspan="5" style="text-align: center; font-weight: 600;">
+                                        <span th:text="#{user_management.table.foot_title} + ' ' + ${#lists.size(users)}"></span>
+                                    </td>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </wa-scroller>
+                    </div>
+                </div>
+            </wa-card>
+        </div>
+    </div>
+</main>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/assets/user/list.js}"></script>
+</th:block>
+</body>
+</html>
+
