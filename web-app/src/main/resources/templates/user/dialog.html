@@ -23,15 +23,15 @@
                                name="tenantRoleCode"
                                th:label="#{user_management.dialog.role_label}"
                                required>
-                        <wa-option th:each="role : ${tenantRoles}" th:value="${role.code}" th:text="${role.name()}"></wa-option>
+                        <wa-option th:each="role : ${tenantRoles}"
+                                   th:value="${role.code}"
+                                   th:text="${role.name()}"></wa-option>
                     </wa-select>
                 </div>
 
                 <div slot="footer" class="wa-cluster wa-split wa-gap-s">
-                    <wa-button variant="neutral" data-dialog="close" th:text="#{user_management.button.cancel}">
-                    </wa-button>
-                    <wa-button type="submit" variant="brand" th:text="#{user_management.create_user}">
-                    </wa-button>
+                    <wa-button variant="neutral" data-dialog="close" th:text="#{user_management.button.cancel}"></wa-button>
+                    <wa-button type="submit" variant="brand" th:text="#{user_management.create_user}"></wa-button>
                 </div>
             </form>
         </div>
@@ -53,14 +53,17 @@
                               name="email"
                               th:label="#{user_management.dialog.email_label}"
                               th:value="${updateUserRequest.email}"
-                              disabled>
+                              readonly>
                     </wa-input>
                     <wa-select id="editRoleCode"
                                name="tenantRoleCode"
                                th:label="#{user_management.dialog.role_label}"
                                th:value="${updateUserRequest.tenantRoleCode}"
                                th:if="${!updateUserRequest.hasTenantOwnerRole}">
-                        <wa-option th:each="role : ${tenantRoles}" th:value="${role.code}" th:text="${role.name()}"></wa-option>
+                        <wa-option th:each="role : ${tenantRoles}"
+                                   th:value="${role.code}"
+                                   th:text="${role.name()}">
+                        </wa-option>
                     </wa-select>
                     <wa-input type="password"
                               id="editPassword"
@@ -81,10 +84,8 @@
                     </div>
                 </div>
                 <div slot="footer" class="wa-cluster wa-split wa-gap-s">
-                    <wa-button variant="neutral" data-dialog="close" th:text="#{user_management.button.cancel}">
-                    </wa-button>
-                    <wa-button type="submit" variant="brand" th:text="#{user_management.update_user}">
-                    </wa-button>
+                    <wa-button variant="neutral" data-dialog="close" th:text="#{user_management.button.cancel}"></wa-button>
+                    <wa-button type="submit" variant="brand" th:text="#{user_management.update_user}"></wa-button>
                 </div>
             </form>
         </div>
