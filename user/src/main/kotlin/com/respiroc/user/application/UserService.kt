@@ -60,6 +60,7 @@ class UserService(
         newUser.email = createUserDTO.email
         newUser.passwordHash = passwordEncoder.encode(createUserDTO.password)
         newUser.lastTenantId = tenantId
+        newUser.isEnableCreateCompany = false
         val savedUser = userRepository.save(newUser)
 
         // Assign the role to the user
@@ -73,6 +74,7 @@ class UserService(
             password = savedUser.passwordHash,
             isEnabled = savedUser.isEnabled,
             isLocked = savedUser.isLocked,
+            isEnableCreateCompany = savedUser.isEnableCreateCompany,
             currentTenant = null,
             tenants = emptyList(),
             roles = emptyList()
@@ -122,6 +124,7 @@ class UserService(
                 email = user.email,
                 isEnabled = user.isEnabled,
                 isLocked = user.isLocked,
+                isEnableCreateCompany = user.isEnableCreateCompany,
                 lastLoginAt = user.lastLoginAt,
                 createdAt = user.createdAt,
                 updatedAt = user.updatedAt,
@@ -143,6 +146,7 @@ class UserService(
             email = user.email,
             isEnabled = user.isEnabled,
             isLocked = user.isLocked,
+            isEnableCreateCompany = user.isEnableCreateCompany,
             lastLoginAt = user.lastLoginAt,
             createdAt = user.createdAt,
             updatedAt = user.updatedAt,
@@ -206,6 +210,7 @@ class UserService(
                     password = user.passwordHash,
                     isEnabled = user.isEnabled,
                     isLocked = user.isLocked,
+                    isEnableCreateCompany = user.isEnableCreateCompany,
                     currentTenant = null,
                     tenants = emptyList(),
                     roles = emptyList()
@@ -343,6 +348,7 @@ class UserService(
             password = this.passwordHash,
             isEnabled = this.isEnabled,
             isLocked = this.isLocked,
+            isEnableCreateCompany = this.isEnableCreateCompany,
             currentTenant = this.toCurrentTenant(tenantId),
             tenants = this.getTenantsInfo(),
             roles = this.roles.map { it -> it.toRoleContext() }.toList()

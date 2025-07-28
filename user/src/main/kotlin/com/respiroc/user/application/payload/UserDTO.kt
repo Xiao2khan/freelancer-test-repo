@@ -11,6 +11,7 @@ data class UserDTO(
     val email: String,
     val isEnabled: Boolean,
     val isLocked: Boolean,
+    val isEnableCreateCompany: Boolean,
     val lastLoginAt: Instant?,
     val createdAt: Instant,
     val updatedAt: Instant,

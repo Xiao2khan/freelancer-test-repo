@@ -21,6 +21,7 @@ open class BaseController {
     val currentTenantAttributeName: String = "currentTenant"
     val calloutAttributeName: String = "callout"
     val hasTenantOwnerAttributeName: String = "hasTenantOwnerRole"
+    val isEnableCreateCompanyAttributeName: String = "isEnableCreateCompany"
 
     companion object {
         private const val JWT_TOKEN_PERIOD = 24 * 60 * 60
@@ -70,6 +71,7 @@ open class BaseController {
         model.addAttribute(tenantsAttributeName, tenants)
         model.addAttribute(titleAttributeName, "${currentTenant.companyName} - $title")
         model.addAttribute(hasTenantOwnerAttributeName, hasTenantOwnerRole)
+        model.addAttribute(isEnableCreateCompanyAttributeName, user().isEnableCreateCompany)
     }
 
     fun addCommonAttributes(

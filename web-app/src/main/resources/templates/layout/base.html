@@ -37,7 +37,7 @@
 
                     <span th:text="${tenant.companyName}"/>
                 </wa-dropdown-item>
-                <div th:if="${hasTenantOwnerRole}">
+                <div th:if="${isEnableCreateCompany}">
                     <wa-divider></wa-divider>
                     <wa-dropdown-item onclick="window.open('/tenant/create')">
                         <wa-icon slot="icon" name="plus"></wa-icon>

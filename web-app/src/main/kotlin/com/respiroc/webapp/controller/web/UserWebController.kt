@@ -33,11 +33,12 @@ class UserWebController(
             val currentUser = user()
             val hasOwnerRole = hasOwnerRole()
             val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole)
+            val rolesExcludingOwner = TenantRoleCode.entries.filter { it != TenantRoleCode.OWNER }
 
             addCommonAttributesForCurrentTenant(model, "User Management")
             model.addAttribute("users", users)
             model.addAttribute("canCreateUser", hasOwnerRole)
-            model.addAttribute("tenantRoles", TenantRoleCode.values())
+            model.addAttribute("tenantRoles", rolesExcludingOwner)
 
             return "user/list"
         } catch (e: Exception) {
@@ -71,10 +72,11 @@ class UserWebController(
                 tenantRoleCode = userDto.tenantRoles.firstOrNull()?.code,
                 hasTenantOwnerRole = userDto.tenantRoles.any { it.code == TenantRoleCode.OWNER.code }
             )
+            val rolesExcludingOwner = TenantRoleCode.entries.filter { it != TenantRoleCode.OWNER }
 
             addCommonAttributesForCurrentTenant(model, "Edit User")
             model.addAttribute("updateUserRequest", updateUserRequest)
-            model.addAttribute("tenantRoles", TenantRoleCode.values())
+            model.addAttribute("tenantRoles", rolesExcludingOwner)
 
             return "user/edit"
         } catch (e: UnauthorizedException) {
@@ -121,9 +123,11 @@ class UserHTMXController(
                 tenantRoleCode = userDto.tenantRoles.firstOrNull()?.code,
                 hasTenantOwnerRole = userDto.tenantRoles.any { it.code == TenantRoleCode.OWNER.code }
             )
+            val rolesExcludingOwner = TenantRoleCode.entries.filter { it != TenantRoleCode.OWNER }
+
             addCommonAttributesForCurrentTenant(model, "User Management")
             model.addAttribute("updateUserRequest", updateUserRequest)
-            model.addAttribute("tenantRoles", TenantRoleCode.values())
+            model.addAttribute("tenantRoles", rolesExcludingOwner)
 
             return "user/dialog :: editUserDialog"
         } catch (e: Exception) {

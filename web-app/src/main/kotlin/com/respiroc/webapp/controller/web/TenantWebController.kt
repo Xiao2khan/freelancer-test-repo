@@ -22,11 +22,10 @@ class TenantWebController : BaseController() {
     @GetMapping("/create")
     fun createCompany(model: Model): String {
 
-        val hasOwnerRole = hasOwnerRole()
-        if (!hasOwnerRole) {
-            throw UnauthorizedException("Only users with the Owner role can create new company")
+        val user = user()
+        if (!user.isEnableCreateCompany) {
+            throw UnauthorizedException("Your account is not enabled to create new company!")
         }
-
         model.addAttribute("createCompanyRequest", CreateCompanyRequest("", "", "NO"))
 
         try {
@@ -64,9 +63,9 @@ class TenantHTMXController(
             return "fragments/error-message"
         }
 
-        val hasOwnerRole = hasOwnerRole()
-        if (!hasOwnerRole) {
-            throw UnauthorizedException("Only users with the Owner role can create new company")
+        val user = user()
+        if (!user.isEnableCreateCompany) {
+            throw UnauthorizedException("Your account is not enabled to create new company!")
         }
 
         val companyInfo =
@@ -86,7 +85,6 @@ class TenantHTMXController(
 
         val tenant = userService.createTenantForUser(payload, user())
 
-        val user = user()
         userService.selectTenant(user, tenant.id)
         val token = jwt.generateToken(subject = user.id.toString(), tenantId = tenant.id)
         setJwtCookie(token, response)

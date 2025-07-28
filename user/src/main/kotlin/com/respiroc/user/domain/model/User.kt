@@ -33,6 +33,10 @@ open class User : Serializable {
     @Column(name = "is_locked")
     open var isLocked: Boolean = false
 
+    @ColumnDefault("false")
+    @Column(name = "is_enable_create_company")
+    open var isEnableCreateCompany: Boolean = true
+
     @Column(name = "last_login_at")
     open var lastLoginAt: Instant? = null
 
