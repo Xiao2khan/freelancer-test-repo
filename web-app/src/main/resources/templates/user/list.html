@@ -13,7 +13,6 @@
             <div class="wa-cluster wa-justify-between wa-items-center">
                 <h1 class="wa-heading-l" th:text="#{user_management.title}"></h1>
                 <wa-button class="btn btn-primary"
-                           id="create-user-button"
                            onclick="document.getElementById('create-user-dialog').open = true"
                            th:text="#{user_management.create_user}"
                            th:if="${canCreateUser}">
@@ -42,7 +41,7 @@
                             </div>
                         </div>
 
-                        <wa-scroller th:unless="${#lists.isEmpty(users)}">
+                        <wa-scroller th:unless="${#lists.isEmpty(users)}" orientation="vertical">
                             <table id="dataTable" class="user-table">
                                 <thead>
                                 <tr>

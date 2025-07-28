@@ -86,7 +86,7 @@ class UserService(
 
     fun listUserManagement(currentUserId: Long, tenantId: Long, hasOwnerRole: Boolean): List<UserDTO> {
         if (hasOwnerRole) {
-            return getAllUsers(tenantId)
+            return getAllUsersByTenantId(tenantId)
         } else {
             return listOf(getUserById(currentUserId, tenantId))
         }
@@ -95,12 +95,28 @@ class UserService(
     /**
      * Get all users for a tenant
      */
-    fun getAllUsers(tenantId: Long): List<UserDTO> {
+    fun getAllUsersByTenantId(tenantId: Long): List<UserDTO> {
+        // Get all UserTenant entities for the specified tenant
         val userTenants = userTenantRepository.findAllByTenantId(tenantId)
-        return userTenants.map { userTenant: UserTenant ->
-            val user = userRepository.findById(userTenant.userId).orElseThrow {
-                IllegalArgumentException("User with ID ${userTenant.userId} not found")
-            }
+
+        // Extract all user IDs
+        val userIds = userTenants.map { it.userId }
+
+        // No users found for this tenant
+        if (userIds.isEmpty()) {
+            return emptyList()
+        }
+
+        val users = userRepository.findAllById(userIds)
+            .associateBy { it.id }
+
+        // Fetch all tenant roles for all users in a single query
+        val userTenantRolesMap = findTenantRolesForUsers(userIds, tenantId)
+
+        // Map UserTenant entities to UserDTO objects
+        return userTenants.mapNotNull { userTenant ->
+            val user = users[userTenant.userId] ?: return@mapNotNull null
+
             UserDTO(
                 id = user.id,
                 email = user.email,
@@ -109,7 +125,7 @@ class UserService(
                 lastLoginAt = user.lastLoginAt,
                 createdAt = user.createdAt,
                 updatedAt = user.updatedAt,
-                tenantRoles = findTenantRoles(user.id, tenantId)
+                tenantRoles = userTenantRolesMap[user.id] ?: emptyList()
             )
         }
     }
@@ -138,11 +154,7 @@ class UserService(
      * Update a user
      * Only users with the Owner role can update users
      */
-    fun updateUser(updateUserDTO: UpdateUserDTO, currentUser: UserContext, tenantId: Long): UserDTO {
-        // Check if the current user has the Owner role
-        val hasOwnerRole = currentUser.currentTenant?.roles?.any {
-            it.code == TenantRoleCode.OWNER.code
-        } ?: false
+    fun updateUser(updateUserDTO: UpdateUserDTO, currentUser: UserContext, tenantId: Long, hasOwnerRole: Boolean): UserDTO {
 
         if (!hasOwnerRole) {
             throw UnauthorizedException("Only users with the Owner role can update users")
@@ -248,6 +260,31 @@ class UserService(
         // Map the roles to TenantRoleContext objects
         return userTenant.roles.map {
             it.tenantRole.toTenantRoleContext()
+        }
+    }
+
+    /**
+     * Find tenant roles for multiple users in a single query
+     */
+    fun findTenantRolesForUsers(userIds: List<Long>, tenantId: Long): Map<Long, List<TenantRoleContext>> {
+        if (userIds.isEmpty()) {
+            return emptyMap()
+        }
+
+        // Get all users with their tenant roles in a single query
+        val users = userRepository.findUsersWithTenantRoles(userIds, tenantId)
+
+        // Create a map of user ID to tenant roles
+        return users.associate { user ->
+            // Find the UserTenant with the specified tenantId
+            val userTenant = user.userTenants.singleOrNull { it.tenantId == tenantId }
+
+            // Map the roles to TenantRoleContext objects
+            val tenantRoles = userTenant?.roles?.map {
+                it.tenantRole.toTenantRoleContext()
+            } ?: emptyList()
+
+            user.id to tenantRoles
         }
     }
 

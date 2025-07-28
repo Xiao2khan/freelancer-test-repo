@@ -22,4 +22,16 @@ interface UserRepository : CustomJpaRepository<User, Long> {
         AND userTenants.tenantId= :tenantId
         """)
     fun findUserWithTenantRoles(@Param("userId") userId: Long, @Param("tenantId") tenantId: Long): User?
+
+    @Query("""
+        SELECT user FROM User user
+        LEFT JOIN FETCH user.userTenants userTenants
+        LEFT JOIN FETCH user.roles roles
+        LEFT JOIN FETCH userTenants.roles userTenantRoles
+        LEFT JOIN FETCH userTenantRoles.tenantRole tenantRoles
+        LEFT JOIN FETCH tenantRoles.tenantPermissions tenantPermissions
+        WHERE user.id IN :userIds
+        AND userTenants.tenantId= :tenantId
+        """)
+    fun findUsersWithTenantRoles(@Param("userIds") userIds: List<Long>, @Param("tenantId") tenantId: Long): List<User>
 }

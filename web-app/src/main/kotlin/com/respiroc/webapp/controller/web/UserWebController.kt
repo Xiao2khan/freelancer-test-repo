@@ -218,7 +218,7 @@ class UserHTMXController(
                 password = updateUserRequest.password
             )
 
-            userService.updateUser(updateUserDTO, user(), tenantId)
+            userService.updateUser(updateUserDTO, user(), tenantId, hasOwnerRole)
             // Refresh the user list
             val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole)
             addCommonAttributesForCurrentTenant(model, "User Management")
