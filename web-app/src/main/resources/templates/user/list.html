@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html lang="en" dir="ltr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout/base}">
 <head>
     <title th:text="#{user_management.title}"></title>
@@ -13,9 +16,9 @@
         <div class="wa-stack wa-gap-s">
             <div class="wa-cluster wa-align-items-start">
                 <h1 class="wa-heading-l" th:text="#{user_management.title}"></h1>
-                <wa-button onclick="document.getElementById('create-user-dialog').open = true"
-                           th:text="#{user_management.create_user}"
-                           th:if="${canCreateUser}">
+                <wa-button sec:authorize="hasRole('TENANT_OWNER')"
+                           onclick="document.getElementById('create-user-dialog').open = true"
+                           th:text="#{user_management.create_user}">
                 </wa-button>
 
                 <wa-button hx-get="/htmx/user/list"
@@ -47,7 +50,7 @@
                                     <th class="r-w-20" th:text="#{user_management.table.status}"></th>
                                     <th class="r-w-20" th:text="#{user_management.table.roles}"></th>
                                     <th class="r-w-20" th:text="#{user_management.table.last_login}"></th>
-                                    <th th:if="${canCreateUser}" class="r-w-15" th:text="#{user_management.table.action}"></th>
+                                    <th sec:authorize="hasRole('TENANT_OWNER')" class="r-w-15" th:text="#{user_management.table.action}"></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -72,18 +75,18 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <wa-button th:hx-get="@{/htmx/user/{id}/edit-modal(id=${user.id})}"
+                                        <wa-button sec:authorize="hasRole('TENANT_OWNER')"
+                                                th:hx-get="@{/htmx/user/{id}/edit-modal(id=${user.id})}"
                                                 hx-target="#modal-container"
                                                 hx-swap="innerHTML"
                                                 hx-indicator="#loading-indicator"
-                                                th:if="${canCreateUser}"
                                                 th:text="#{user_management.button.edit}">
                                         </wa-button>
                                     </td>
                                 </tr>
                                 </tbody>
                                 <tfoot>
-                                <tr th:if="${canCreateUser}" class="r-total-row">
+                                <tr sec:authorize="hasRole('TENANT_OWNER')" class="r-total-row">
                                     <td colspan="5" class="r-amount-cell">
                                         <span th:text="#{user_management.table.foot_title} + ' ' + ${#lists.size(users)}"></span>
                                     </td>

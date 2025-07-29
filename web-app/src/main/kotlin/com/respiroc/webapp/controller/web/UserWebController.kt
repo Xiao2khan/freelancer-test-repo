@@ -1,10 +1,7 @@
 package com.respiroc.webapp.controller.web
 
 import com.respiroc.user.application.UserService
-import com.respiroc.user.application.payload.UpdateUserPayload
 import com.respiroc.util.constant.TenantRoleCode
-import com.respiroc.util.exception.UnauthorizedException
-import com.respiroc.webapp.config.annotation.REQUIRE_PERMISSION_ALL_WRITE
 import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.controller.request.CreateUserRequest
 import com.respiroc.webapp.controller.request.UpdateUserRequest
@@ -12,6 +9,8 @@ import com.respiroc.webapp.controller.request.toPayload
 import com.respiroc.webapp.controller.response.Callout
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest
 import jakarta.validation.Valid
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.validation.BindingResult
@@ -37,7 +36,6 @@ class UserWebController(
 
             addCommonAttributesForCurrentTenant(model, "User Management")
             model.addAttribute("users", users)
-            model.addAttribute("canCreateUser", hasOwnerRole)
             model.addAttribute("tenantRoles", rolesExcludingOwner)
 
             return "user/list"
@@ -60,16 +58,11 @@ class UserHTMXController(
     /**
      * Load the edit user modal
      */
+    @PreAuthorize("hasRole('TENANT_OWNER')")
     @GetMapping("/{id}/edit-modal")
     @HxRequest
     fun loadEditUserModal(@PathVariable id: Long, model: Model): String {
         try {
-            // Check if the current user has the Owner role
-            val hasOwnerRole = hasOwnerRole()
-
-            if (!hasOwnerRole) {
-                throw UnauthorizedException("Only users with the Owner role can edit users")
-            }
             val tenantId = tenantId()
             val userDto = userService.getUserById(id, tenantId)
             val hasTenantOwnerRole = userDto.tenantRoles.any { it.code == TenantRoleCode.OWNER.code }
@@ -94,7 +87,6 @@ class UserHTMXController(
     /**
      * Handle user creation form submission
      */
-    @REQUIRE_PERMISSION_ALL_WRITE
     @PostMapping("/create")
     @HxRequest
     fun createUser(
@@ -113,15 +105,12 @@ class UserHTMXController(
         try {
             val tenantId = tenantId()
             val currentUser = user()
-            val hasOwnerRole = hasOwnerRole()
-
-            userService.createUser(createUserRequest.toPayload(), tenantId, hasOwnerRole)
+            userService.createUser(createUserRequest.toPayload(), tenantId)
 
             // Refresh the user list
-            val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole)
+            val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole())
             addCommonAttributesForCurrentTenant(model, "User Management")
             model.addAttribute("users", users)
-            model.addAttribute("canCreateUser", hasOwnerRole)
 
             // Return the updated user table
             return "user/list :: userTable"
@@ -156,15 +145,12 @@ class UserHTMXController(
 
         try {
             val tenantId = tenantId()
-            val hasOwnerRole = hasOwnerRole()
             val currentUser = user()
-
-            userService.updateUser(updateUserRequest.toPayload(), tenantId, hasOwnerRole)
+            userService.updateUser(updateUserRequest.toPayload(), tenantId)
             // Refresh the user list
-            val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole)
+            val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole())
             addCommonAttributesForCurrentTenant(model, "User Management")
             model.addAttribute("users", users)
-            model.addAttribute("canCreateUser", hasOwnerRole)
 
             // Return the updated user table
             return "user/list :: userTable"
@@ -192,7 +178,6 @@ class UserHTMXController(
             val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole)
             addCommonAttributesForCurrentTenant(model, "User Management")
             model.addAttribute("users", users)
-            model.addAttribute("canCreateUser", hasOwnerRole)
 
             return "user/list :: userTable"
         } catch (e: Exception) {

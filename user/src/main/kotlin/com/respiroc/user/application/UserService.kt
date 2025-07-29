@@ -19,6 +19,7 @@ import com.respiroc.util.exception.UnauthorizedException
 import com.respiroc.util.exception.AuthenticationException
 import com.respiroc.util.exception.ResourceAlreadyExistsException
 import com.respiroc.util.payload.CreateCompanyPayload
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
@@ -43,11 +44,8 @@ class UserService(
      * Create a new user with email, password, and role
      * Only users with the Owner role can create new users
      */
-    fun createUser(createUserPayload: CreateUserPayload, tenantId: Long, hasOwnerRole: Boolean) {
-
-        if (!hasOwnerRole) {
-            throw UnauthorizedException("Only users with the Owner role can create new users")
-        }
+    @PreAuthorize("hasRole('TENANT_OWNER')")
+    fun createUser(createUserPayload: CreateUserPayload, tenantId: Long) {
 
         val existingUser = userRepository.findByEmail(createUserPayload.email)
         if (existingUser != null) {
@@ -132,11 +130,8 @@ class UserService(
      * Update a user
      * Only users with the Owner role can update users
      */
-    fun updateUser(updateUserPayload: UpdateUserPayload, tenantId: Long, hasOwnerRole: Boolean): UserDTO {
-
-        if (!hasOwnerRole) {
-            throw UnauthorizedException("Only users with the Owner role can update users")
-        }
+    @PreAuthorize("hasRole('TENANT_OWNER')")
+    fun updateUser(updateUserPayload: UpdateUserPayload, tenantId: Long): UserDTO {
 
         // Get the user to update
         val user = userRepository.findById(updateUserPayload.id).orElseThrow {
