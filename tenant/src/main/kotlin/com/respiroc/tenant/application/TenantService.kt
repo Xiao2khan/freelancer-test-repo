@@ -54,6 +54,10 @@ class TenantService(
         return tenantRoleRepository.findByCode(role.code)
     }
 
+    fun findTenantRolesByCodes(tenantRoleCodes: Set<String>): List<TenantRole> {
+        return tenantRoleRepository.findByCodeIn(tenantRoleCodes)
+    }
+
     private fun generateSlug(name: String): String {
         val slug = name
             .lowercase()

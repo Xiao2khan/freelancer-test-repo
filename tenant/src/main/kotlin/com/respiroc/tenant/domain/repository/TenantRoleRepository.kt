@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository
 interface TenantRoleRepository : CustomJpaRepository<TenantRole, Long> {
 
     fun findByCode(code: String): TenantRole
+
+    fun findByCodeIn(codes: Set<String>): List<TenantRole>
 }

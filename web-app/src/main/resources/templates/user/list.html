@@ -60,7 +60,7 @@
                                         <wa-badge th:unless="${user.isEnabled}" variant="warning" th:text="#{user_management.disabled}"></wa-badge>
                                         <wa-badge th:if="${user.isLocked}" variant="danger" th:text="#{user_management.locked}"></wa-badge>
                                     </td>
-                                    <td>
+                                    <td class="wa-gap-2xs">
                                         <wa-badge th:each="role, iterStat : ${user.tenantRoles}"
                                                   appearance="filled outlined"
                                                   variant="brand"

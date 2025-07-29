@@ -19,8 +19,8 @@
                               name="password"
                               required>
                     </wa-input>
-                    <wa-select id="createRoleCode"
-                               name="tenantRoleCode"
+                    <wa-select id="createRoleCode" multiple
+                               name="tenantRoleCodes"
                                th:label="#{user_management.dialog.role_label}"
                                required>
                         <wa-option th:each="role : ${tenantRoles}"
@@ -55,14 +55,14 @@
                               th:value="${updateUserRequest.email}"
                               readonly>
                     </wa-input>
-                    <wa-select id="editRoleCode"
-                               name="tenantRoleCode"
+                    <wa-select id="editRoleCode" multiple
+                               name="tenantRoleCodes"
                                th:label="#{user_management.dialog.role_label}"
-                               th:value="${updateUserRequest.tenantRoleCode}"
-                               th:if="${!updateUserRequest.hasTenantOwnerRole}">
+                               th:if="${!hasTenantOwnerRole}">
                         <wa-option th:each="role : ${tenantRoles}"
                                    th:value="${role.code}"
-                                   th:text="${role.name()}">
+                                   th:text="${role.name()}"
+                                   th:selected="${updateUserRequest.tenantRoleCodes.contains(role.code)}">
                         </wa-option>
                     </wa-select>
                     <wa-input type="password"
@@ -70,7 +70,7 @@
                               name="password"
                               th:label="#{user_management.dialog.update_password_label}">
                     </wa-input>
-                    <div class="wa-stack wa-gap-xs" th:if="${!updateUserRequest.hasTenantOwnerRole}">
+                    <div class="wa-stack wa-gap-xs" th:if="${!hasTenantOwnerRole}">
                         <wa-checkbox id="isEnabled"
                                      name="isEnabled"
                                      th:checked="${updateUserRequest.isEnabled}"

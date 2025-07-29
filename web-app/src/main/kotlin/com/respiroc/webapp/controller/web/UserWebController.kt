@@ -1,14 +1,14 @@
 package com.respiroc.webapp.controller.web
 
 import com.respiroc.user.application.UserService
-import com.respiroc.user.application.payload.CreateUserDTO
-import com.respiroc.user.application.payload.UpdateUserDTO
+import com.respiroc.user.application.payload.UpdateUserPayload
 import com.respiroc.util.constant.TenantRoleCode
 import com.respiroc.util.exception.UnauthorizedException
 import com.respiroc.webapp.config.annotation.REQUIRE_PERMISSION_ALL_WRITE
 import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.controller.request.CreateUserRequest
 import com.respiroc.webapp.controller.request.UpdateUserRequest
+import com.respiroc.webapp.controller.request.toPayload
 import com.respiroc.webapp.controller.response.Callout
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest
 import jakarta.validation.Valid
@@ -48,47 +48,6 @@ class UserWebController(
         }
     }
 
-    /**
-     * Display the user edit form
-     */
-    @GetMapping("/{id}/edit")
-    fun editUserForm(@PathVariable id: Long, model: Model): String {
-        try {
-            // Check if the current user has the Owner role
-            val hasOwnerRole = hasOwnerRole()
-
-            if (!hasOwnerRole) {
-                throw UnauthorizedException("Only users with the Owner role can edit users")
-            }
-
-            val tenantId = tenantId()
-            val userDto = userService.getUserById(id, tenantId)
-
-            val updateUserRequest = UpdateUserRequest(
-                id = userDto.id,
-                email = userDto.email,
-                isEnabled = userDto.isEnabled,
-                isLocked = userDto.isLocked,
-                tenantRoleCode = userDto.tenantRoles.firstOrNull()?.code,
-                hasTenantOwnerRole = userDto.tenantRoles.any { it.code == TenantRoleCode.OWNER.code }
-            )
-            val rolesExcludingOwner = TenantRoleCode.entries.filter { it != TenantRoleCode.OWNER }
-
-            addCommonAttributesForCurrentTenant(model, "Edit User")
-            model.addAttribute("updateUserRequest", updateUserRequest)
-            model.addAttribute("tenantRoles", rolesExcludingOwner)
-
-            return "user/edit"
-        } catch (e: UnauthorizedException) {
-            addCommonAttributesForCurrentTenant(model, "Unauthorized")
-            model.addAttribute(calloutAttributeName, e.message)
-            return "fragments/callout-message"
-        } catch (e: Exception) {
-            addCommonAttributesForCurrentTenant(model, "Error")
-            model.addAttribute(calloutAttributeName, "Error: ${e.message}")
-            return "fragments/callout-message"
-        }
-    }
 }
 
 @Controller
@@ -111,23 +70,15 @@ class UserHTMXController(
             if (!hasOwnerRole) {
                 throw UnauthorizedException("Only users with the Owner role can edit users")
             }
-
             val tenantId = tenantId()
             val userDto = userService.getUserById(id, tenantId)
-
-            val updateUserRequest = UpdateUserRequest(
-                id = userDto.id,
-                email = userDto.email,
-                isEnabled = userDto.isEnabled,
-                isLocked = userDto.isLocked,
-                tenantRoleCode = userDto.tenantRoles.firstOrNull()?.code,
-                hasTenantOwnerRole = userDto.tenantRoles.any { it.code == TenantRoleCode.OWNER.code }
-            )
+            val hasTenantOwnerRole = userDto.tenantRoles.any { it.code == TenantRoleCode.OWNER.code }
             val rolesExcludingOwner = TenantRoleCode.entries.filter { it != TenantRoleCode.OWNER }
 
             addCommonAttributesForCurrentTenant(model, "User Management")
-            model.addAttribute("updateUserRequest", updateUserRequest)
+            model.addAttribute("updateUserRequest", userDto)
             model.addAttribute("tenantRoles", rolesExcludingOwner)
+            model.addAttribute("hasTenantOwnerRole", hasTenantOwnerRole)
 
             return "user/dialog :: editUserDialog"
         } catch (e: Exception) {
@@ -164,13 +115,7 @@ class UserHTMXController(
             val currentUser = user()
             val hasOwnerRole = hasOwnerRole()
 
-            val createUserDTO = CreateUserDTO(
-                email = createUserRequest.email,
-                password = createUserRequest.password,
-                tenantRoleCode = createUserRequest.tenantRoleCode
-            )
-
-            userService.createUser(createUserDTO, tenantId, hasOwnerRole)
+            userService.createUser(createUserRequest.toPayload(), tenantId, hasOwnerRole)
 
             // Refresh the user list
             val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole)
@@ -213,16 +158,8 @@ class UserHTMXController(
             val tenantId = tenantId()
             val hasOwnerRole = hasOwnerRole()
             val currentUser = user()
-            val updateUserDTO = UpdateUserDTO(
-                id = updateUserRequest.id,
-                email = updateUserRequest.email,
-                isEnabled = updateUserRequest.isEnabled,
-                isLocked = updateUserRequest.isLocked,
-                tenantRoleCode = updateUserRequest.tenantRoleCode,
-                password = updateUserRequest.password
-            )
 
-            userService.updateUser(updateUserDTO, user(), tenantId, hasOwnerRole)
+            userService.updateUser(updateUserRequest.toPayload(), tenantId, hasOwnerRole)
             // Refresh the user list
             val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole)
             addCommonAttributesForCurrentTenant(model, "User Management")
