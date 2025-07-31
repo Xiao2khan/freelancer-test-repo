@@ -28,6 +28,11 @@ class SpringUser(val ctx: UserContext) : User(
                     .map { permission: PermissionContext -> SimpleGrantedAuthority(permission.code) }
                     .collect(Collectors.toList<GrantedAuthority>())
             )
+            authorities.addAll(
+                roles.stream()
+                    .map { role: RoleContext -> SimpleGrantedAuthority(("ROLE_${role.code}")) }
+                    .collect(Collectors.toList<GrantedAuthority>())
+            )
 
             if (tenantRoles != null) {
                 authorities.addAll(
