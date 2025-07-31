@@ -3,9 +3,6 @@ package com.respiroc.user.application.payload
 import com.respiroc.util.context.TenantRoleContext
 import java.time.Instant
 
-/**
- * Data Transfer Object for User information
- */
 data class UserDTO(
     val id: Long,
     val email: String,

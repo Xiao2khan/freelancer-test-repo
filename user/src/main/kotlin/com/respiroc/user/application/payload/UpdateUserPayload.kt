@@ -1,8 +1,5 @@
 package com.respiroc.user.application.payload
 
-/**
- * Data Transfer Object for updating a user
- */
 data class UpdateUserPayload(
     val id: Long,
     val email: String,

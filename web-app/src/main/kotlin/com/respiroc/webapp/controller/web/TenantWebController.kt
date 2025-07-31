@@ -2,7 +2,6 @@ package com.respiroc.webapp.controller.web
 
 import com.respiroc.companylookup.api.CompanyLookupInternalApi
 import com.respiroc.user.application.UserService
-import com.respiroc.util.exception.UnauthorizedException
 import com.respiroc.util.payload.CreateCompanyPayload
 import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.controller.request.CreateCompanyRequest

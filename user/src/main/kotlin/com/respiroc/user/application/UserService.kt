@@ -42,10 +42,6 @@ class UserService(
 
     private val passwordEncoder = BCryptPasswordEncoder()
 
-    /**
-     * Create a new user with email, password, and role
-     * Only users with the Owner role can create new users
-     */
     @PreAuthorize("hasRole('TENANT_OWNER')")
     fun createUser(createUserPayload: CreateUserPayload, tenantId: Long) {
 
@@ -54,7 +50,6 @@ class UserService(
             throw IllegalArgumentException("User with email ${createUserPayload.email} already exists")
         }
 
-        // Create the new user
         val newUser = User()
         newUser.email = createUserPayload.email
         newUser.passwordHash = passwordEncoder.encode(createUserPayload.password)
@@ -62,7 +57,6 @@ class UserService(
         val savedUser = userRepository.save(newUser)
 
         addRoleForUser(savedUser.id, RoleCode.SUB_USER)
-        // Assign the tenant role to the user
         val tenantRoles = tenantService.findTenantRolesByCodes(createUserPayload.tenantRoleCodes)
         for (tenantRole in tenantRoles) {
             addUserTenantRole(tenantId, tenantRole, savedUser.id)
@@ -79,9 +73,6 @@ class UserService(
         }
     }
 
-    /**
-     * Get all users for a tenant
-     */
     fun getAllUsersByTenantId(tenantId: Long): List<UserDTO> {
         // Get all UserTenant entities for the specified tenant
         val userTenants = userTenantRepository.findAllByTenantId(tenantId)
@@ -96,7 +87,6 @@ class UserService(
 
         val userTenantRolesMap = findTenantRolesForUsers(userIds, tenantId)
 
-        // Map UserTenant entities to UserDTO objects
         return userTenants.mapNotNull { userTenant ->
             val user = users[userTenant.userId] ?: return@mapNotNull null
 
@@ -113,9 +103,6 @@ class UserService(
         }
     }
 
-    /**
-     * Get a user by ID
-     */
     fun getUserById(userId: Long, tenantId: Long): UserDTO {
         val user = userRepository.findById(userId).orElseThrow {
             IllegalArgumentException("User with ID $userId not found")
@@ -127,56 +114,41 @@ class UserService(
         return user.toUserDTO(tenantRoles)
     }
 
-    /**
-     * Update a user
-     * Only users with the Owner role can update users
-     */
     @PreAuthorize("hasRole('TENANT_OWNER')")
     fun updateUser(updateUserPayload: UpdateUserPayload, tenantId: Long): UserDTO {
 
-        // Get the user to update
         val user = userRepository.findById(updateUserPayload.id).orElseThrow {
             IllegalArgumentException("User with ID ${updateUserPayload.id} not found")
         }
 
-        // Update the user
         user.apply {
             email = updateUserPayload.email
             isEnabled = updateUserPayload.isEnabled
             isLocked = updateUserPayload.isLocked
 
-            // Update password if provided
             updateUserPayload.password?.takeUnless { it.isBlank() }?.let {
                 passwordHash = passwordEncoder.encode(it)
             }
         }
         val savedUser = userRepository.save(user)
 
-        // Update the user's role if provided
         if (updateUserPayload.tenantRoleCodes.isNotEmpty()) {
-            // Get the current tenant roles for the user
             val currentTenantRoles = findTenantRoles(user.id, tenantId)
             val currentTenantRoleCodes = currentTenantRoles.map { it.code }.toSet()
 
-            // Only update if the role is actually changing
             if (updateUserPayload.tenantRoleCodes != currentTenantRoleCodes) {
 
                 val tenantRoles = tenantService.findTenantRolesByCodes(updateUserPayload.tenantRoleCodes)
                 val userTenant = getOrCreateUserTenant(user.id, tenantId)
-
-                // Remove existing tenant roles for this user in this tenant
                 userTenant.roles.toList().forEach { role ->
                     userTenantRoleRepository.delete(role)
                 }
 
-                // Add the new role
                 for (tenantRole in tenantRoles) {
                     addUserTenantRole(tenantId, tenantRole, user.id)
                 }
             }
         }
-
-        // Return the updated user DTO
         return getUserById(savedUser.id, tenantId)
     }
 
@@ -211,35 +183,21 @@ class UserService(
     }
 
     fun findTenantRoles(userId: Long, tenantId: Long): List<TenantRoleContext> {
-        // Get the user with tenant roles
         val user = userRepository.findUserWithTenantRoles(userId, tenantId) ?: return emptyList()
-
-        // Find the UserTenant with the specified tenantId, or return empty list if not found
         val userTenant = user.userTenants.singleOrNull { it.tenantId == tenantId } ?: return emptyList()
-
-        // Map the roles to TenantRoleContext objects
         return userTenant.roles.map {
             it.tenantRole.toTenantRoleContext()
         }
     }
 
-    /**
-     * Find tenant roles for multiple users in a single query
-     */
     fun findTenantRolesForUsers(userIds: List<Long>, tenantId: Long): Map<Long, List<TenantRoleContext>> {
         if (userIds.isEmpty()) {
             return emptyMap()
         }
-
-        // Get all users with their tenant roles in a single query
         val users = userRepository.findUsersWithTenantRoles(userIds, tenantId)
 
-        // Create a map of user ID to tenant roles
         return users.associate { user ->
-            // Find the UserTenant with the specified tenantId
             val userTenant = user.userTenants.singleOrNull { it.tenantId == tenantId }
-
-            // Map the roles to TenantRoleContext objects
             val tenantRoles = userTenant?.roles?.map {
                 it.tenantRole.toTenantRoleContext()
             } ?: emptyList()

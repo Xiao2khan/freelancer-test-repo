@@ -1,14 +1,9 @@
 package com.respiroc.webapp.controller.request
 
-import com.respiroc.user.application.payload.CreateUserPayload
 import com.respiroc.user.application.payload.UpdateUserPayload
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 
-
-/**
- * Request class for updating a user
- */
 data class UpdateUserRequest(
     val id: Long,
 

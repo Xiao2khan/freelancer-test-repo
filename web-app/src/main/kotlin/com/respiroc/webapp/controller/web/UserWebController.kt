@@ -23,9 +23,6 @@ class UserWebController(
     private val userService: UserService
 ) : BaseController() {
 
-    /**
-     * Display the user listing page
-     */
     @GetMapping
     fun listUsers(model: Model): String {
             val tenantId = tenantId()
@@ -47,9 +44,6 @@ class UserHTMXController(
     private val userService: UserService
 ) : BaseController() {
 
-    /**
-     * Load the edit user modal
-     */
     @PreAuthorize("hasRole('TENANT_OWNER')")
     @GetMapping("/{id}/edit-modal")
     @HxRequest
@@ -67,9 +61,6 @@ class UserHTMXController(
         return "user/dialog :: editUserDialog"
     }
 
-    /**
-     * Handle user creation form submission
-     */
     @PostMapping("/create")
     @HxRequest
     fun createUser(
@@ -89,12 +80,10 @@ class UserHTMXController(
         val currentUser = user()
         userService.createUser(createUserRequest.toPayload(), tenantId)
 
-        // Refresh the user list
         val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole())
         addCommonAttributesForCurrentTenant(model, "User Management")
         model.addAttribute("users", users)
 
-        // Return the updated user table
         return "user/list :: userTable"
     }
 
@@ -120,18 +109,13 @@ class UserHTMXController(
         val tenantId = tenantId()
         val currentUser = user()
         userService.updateUser(updateUserRequest.toPayload(), tenantId)
-        // Refresh the user list
         val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole())
         addCommonAttributesForCurrentTenant(model, "User Management")
         model.addAttribute("users", users)
 
-        // Return the updated user table
         return "user/list :: userTable"
     }
 
-    /**
-     * Refresh the user list
-     */
     @GetMapping("/list")
     @HxRequest
     fun refreshUserList(model: Model): String {
