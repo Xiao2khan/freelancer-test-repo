@@ -23,6 +23,7 @@
 
                 <wa-button hx-get="/htmx/user/list"
                            hx-target="#user-table-container"
+                           th:hx-target-error="'#r-callout'"
                            hx-swap="innerHTML"
                            th:text="#{user_management.button.refresh}">
                 </wa-button>
@@ -30,7 +31,6 @@
 
             <!-- Modal Container -->
             <div id="modal-container"></div>
-
             <wa-card>
                 <div class="wa-stack wa-gap-m">
                     <div id="user-table-container" th:fragment="userTable">
@@ -78,6 +78,7 @@
                                         <wa-button sec:authorize="hasRole('TENANT_OWNER')"
                                                 th:hx-get="@{/htmx/user/{id}/edit-modal(id=${user.id})}"
                                                 hx-target="#modal-container"
+                                                th:hx-target-error="'#r-callout'"
                                                 hx-swap="innerHTML"
                                                 hx-indicator="#loading-indicator"
                                                 th:text="#{user_management.button.edit}">

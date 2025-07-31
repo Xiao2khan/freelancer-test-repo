@@ -4,6 +4,7 @@
             <div id="create-callout-container"></div>
             <form id="createUserForm" class="wa-stack wa-gap-m"
                   hx-post="/htmx/user/create"
+                  th:hx-target-error="'#r-callout'"
                   hx-target="#user-table-container"
                   hx-swap="innerHTML">
                 <div class="wa-stack wa-gap-s">
@@ -45,6 +46,7 @@
             <form id="editUserForm" class="wa-stack wa-gap-m"
                   th:hx-post="@{/htmx/user/{id}/update(id=${updateUserRequest.id})}"
                   hx-target="#user-table-container"
+                  th:hx-target-error="'#r-callout'"
                   hx-swap="innerHTML">
                 <div class="wa-stack wa-gap-s">
                     <input type="hidden" name="id" th:value="${updateUserRequest.id}">

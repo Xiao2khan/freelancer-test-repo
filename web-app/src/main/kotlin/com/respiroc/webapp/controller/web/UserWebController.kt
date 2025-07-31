@@ -2,6 +2,7 @@ package com.respiroc.webapp.controller.web
 
 import com.respiroc.user.application.UserService
 import com.respiroc.util.constant.TenantRoleCode
+import com.respiroc.util.exception.BaseException
 import com.respiroc.webapp.controller.BaseController
 import com.respiroc.webapp.controller.request.CreateUserRequest
 import com.respiroc.webapp.controller.request.UpdateUserRequest
@@ -27,7 +28,6 @@ class UserWebController(
      */
     @GetMapping
     fun listUsers(model: Model): String {
-        try {
             val tenantId = tenantId()
             val currentUser = user()
             val hasOwnerRole = hasOwnerRole()
@@ -37,15 +37,8 @@ class UserWebController(
             addCommonAttributesForCurrentTenant(model, "User Management")
             model.addAttribute("users", users)
             model.addAttribute("tenantRoles", rolesExcludingOwner)
-
             return "user/list"
-        } catch (e: Exception) {
-            addCommonAttributesForCurrentTenant(model, "User Management")
-            model.addAttribute(errorMessageAttributeName, "Error loading users: ${e.message}")
-            return "user/list"
-        }
     }
-
 }
 
 @Controller
@@ -54,7 +47,6 @@ class UserHTMXController(
     private val userService: UserService
 ) : BaseController() {
 
-
     /**
      * Load the edit user modal
      */
@@ -62,26 +54,17 @@ class UserHTMXController(
     @GetMapping("/{id}/edit-modal")
     @HxRequest
     fun loadEditUserModal(@PathVariable id: Long, model: Model): String {
-        try {
-            val tenantId = tenantId()
-            val userDto = userService.getUserById(id, tenantId)
-            val hasTenantOwnerRole = userDto.tenantRoles.any { it.code == TenantRoleCode.OWNER.code }
-            val rolesExcludingOwner = TenantRoleCode.entries.filter { it != TenantRoleCode.OWNER }
+        val tenantId = tenantId()
+        val userDto = userService.getUserById(id, tenantId)
+        val hasTenantOwnerRole = userDto.tenantRoles.any { it.code == TenantRoleCode.OWNER.code }
+        val rolesExcludingOwner = TenantRoleCode.entries.filter { it != TenantRoleCode.OWNER }
 
-            addCommonAttributesForCurrentTenant(model, "User Management")
-            model.addAttribute("updateUserRequest", userDto)
-            model.addAttribute("tenantRoles", rolesExcludingOwner)
-            model.addAttribute("hasTenantOwnerRole", hasTenantOwnerRole)
+        addCommonAttributesForCurrentTenant(model, "User Management")
+        model.addAttribute("updateUserRequest", userDto)
+        model.addAttribute("tenantRoles", rolesExcludingOwner)
+        model.addAttribute("hasTenantOwnerRole", hasTenantOwnerRole)
 
-            return "user/dialog :: editUserDialog"
-        } catch (e: Exception) {
-            addCommonAttributesForCurrentTenant(model, "User Management")
-            model.addAttribute(
-                calloutAttributeName,
-                Callout.Error("Error: ${e.message}")
-            )
-            return "fragments/callout-message"
-        }
+        return "user/dialog :: editUserDialog"
     }
 
     /**
@@ -100,28 +83,19 @@ class UserHTMXController(
                 calloutAttributeName,
                 Callout.Error("Please fill in all required fields correctly.")
             )
-            return "fragments/callout-message"
+            return "fragments/r-callout"
         }
-        try {
-            val tenantId = tenantId()
-            val currentUser = user()
-            userService.createUser(createUserRequest.toPayload(), tenantId)
+        val tenantId = tenantId()
+        val currentUser = user()
+        userService.createUser(createUserRequest.toPayload(), tenantId)
 
-            // Refresh the user list
-            val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole())
-            addCommonAttributesForCurrentTenant(model, "User Management")
-            model.addAttribute("users", users)
+        // Refresh the user list
+        val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole())
+        addCommonAttributesForCurrentTenant(model, "User Management")
+        model.addAttribute("users", users)
 
-            // Return the updated user table
-            return "user/list :: userTable"
-
-        } catch (e: Exception) {
-            model.addAttribute(
-                calloutAttributeName,
-                Callout.Error("Failed to create user: ${e.message}")
-            )
-            return "fragments/callout-message"
-        }
+        // Return the updated user table
+        return "user/list :: userTable"
     }
 
     /**
@@ -140,29 +114,19 @@ class UserHTMXController(
                 calloutAttributeName,
                 Callout.Error("Please fill in all required fields correctly.")
             )
-            return "fragments/callout-message"
+            return "fragments/r-callout"
         }
 
-        try {
-            val tenantId = tenantId()
-            val currentUser = user()
-            userService.updateUser(updateUserRequest.toPayload(), tenantId)
-            // Refresh the user list
-            val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole())
-            addCommonAttributesForCurrentTenant(model, "User Management")
-            model.addAttribute("users", users)
+        val tenantId = tenantId()
+        val currentUser = user()
+        userService.updateUser(updateUserRequest.toPayload(), tenantId)
+        // Refresh the user list
+        val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole())
+        addCommonAttributesForCurrentTenant(model, "User Management")
+        model.addAttribute("users", users)
 
-            // Return the updated user table
-            return "user/list :: userTable"
-
-        } catch (e: Exception) {
-            addCommonAttributesForCurrentTenant(model, "User Management")
-            model.addAttribute(
-                calloutAttributeName,
-                Callout.Error("Failed to update user: ${e.message}")
-            )
-            return "fragments/callout-message"
-        }
+        // Return the updated user table
+        return "user/list :: userTable"
     }
 
     /**
@@ -171,22 +135,12 @@ class UserHTMXController(
     @GetMapping("/list")
     @HxRequest
     fun refreshUserList(model: Model): String {
-        try {
             val tenantId = tenantId()
             val currentUser = user()
             val hasOwnerRole = hasOwnerRole()
             val users = userService.listUserManagement(currentUser.id, tenantId, hasOwnerRole)
             addCommonAttributesForCurrentTenant(model, "User Management")
             model.addAttribute("users", users)
-
             return "user/list :: userTable"
-        } catch (e: Exception) {
-            addCommonAttributesForCurrentTenant(model, "User Management")
-            model.addAttribute(
-                calloutAttributeName,
-                Callout.Error("Error loading users: ${e.message}")
-            )
-            return "fragments/callout-message"
-        }
     }
 }

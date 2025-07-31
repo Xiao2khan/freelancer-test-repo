@@ -4,8 +4,8 @@ INSERT INTO permissions (name, code, description, created_at, updated_at) VALUES
 
 -- Insert tenant roles
 INSERT INTO roles (name, code, description, created_at, updated_at) VALUES
-   ('Registered User', 'REGISTERED_USER', 'Can create company, create and manege sub user', NOW(), NOW()),
-   ('Sub User', 'SUB_USER', 'Access with limit permission, can not ', NOW(), NOW());
+   ('Registered User', 'REGISTERED_USER', 'Create company, create and manage sub user', NOW(), NOW()),
+   ('Sub User', 'SUB_USER', 'Access with limit permission, can not create company and new user', NOW(), NOW());
 
 
 -- Link roles to permissions
