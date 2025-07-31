@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html lang="en" dir="ltr"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       class="wa-theme-matter wa-palette-mild wa-brand-purple">
 <head>
     <meta charset="UTF-8">
@@ -37,7 +40,7 @@
 
                     <span th:text="${tenant.companyName}"/>
                 </wa-dropdown-item>
-                <div th:if="${isEnableCreateCompany}">
+                <div sec:authorize="hasRole('REGISTERED_USER')">
                     <wa-divider></wa-divider>
                     <wa-dropdown-item onclick="window.open('/tenant/create')">
                         <wa-icon slot="icon" name="plus"></wa-icon>

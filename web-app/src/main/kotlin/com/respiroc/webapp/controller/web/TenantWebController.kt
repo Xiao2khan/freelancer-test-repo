@@ -10,6 +10,7 @@ import com.respiroc.webapp.service.JwtService
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.validation.BindingResult
@@ -19,15 +20,11 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping(value = ["/tenant"])
 class TenantWebController : BaseController() {
 
+    @PreAuthorize("hasRole('REGISTERED_USER')")
     @GetMapping("/create")
     fun createCompany(model: Model): String {
 
-        val user = user()
-        if (!user.isEnableCreateCompany) {
-            throw UnauthorizedException("Your account is not enabled to create new company!")
-        }
         model.addAttribute("createCompanyRequest", CreateCompanyRequest("", "", "NO"))
-
         try {
             addCommonAttributesForCurrentTenant(model, "Create Company")
             return "tenant/create"
@@ -64,10 +61,6 @@ class TenantHTMXController(
         }
 
         val user = user()
-        if (!user.isEnableCreateCompany) {
-            throw UnauthorizedException("Your account is not enabled to create new company!")
-        }
-
         val companyInfo =
             companyLookupApi.getInfo(createCompanyRequest.organizationNumber, createCompanyRequest.countryCode)
         val companyAddress = companyInfo.address

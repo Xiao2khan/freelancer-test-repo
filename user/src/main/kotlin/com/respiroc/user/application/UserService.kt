@@ -9,13 +9,14 @@ import com.respiroc.user.application.payload.LoginPayload
 import com.respiroc.user.application.payload.UpdateUserPayload
 import com.respiroc.user.application.payload.UserDTO
 import com.respiroc.user.domain.model.*
+import com.respiroc.user.domain.repository.RoleRepository
 import com.respiroc.user.domain.repository.UserRepository
 import com.respiroc.user.domain.repository.UserTenantRepository
 import com.respiroc.user.domain.repository.UserTenantRoleRepository
+import com.respiroc.util.constant.RoleCode
 import com.respiroc.util.constant.TenantRoleCode
 import com.respiroc.util.context.*
 import com.respiroc.util.currency.CurrencyService
-import com.respiroc.util.exception.UnauthorizedException
 import com.respiroc.util.exception.AuthenticationException
 import com.respiroc.util.exception.ResourceAlreadyExistsException
 import com.respiroc.util.payload.CreateCompanyPayload
@@ -35,7 +36,8 @@ class UserService(
     private val tenantService: TenantService,
     private val userTenantRoleRepository: UserTenantRoleRepository,
     private val userTenantRepository: UserTenantRepository,
-    private val currencyService: CurrencyService
+    private val currencyService: CurrencyService,
+    private val roleRepository: RoleRepository
 ) {
 
     private val passwordEncoder = BCryptPasswordEncoder()
@@ -57,10 +59,10 @@ class UserService(
         newUser.email = createUserPayload.email
         newUser.passwordHash = passwordEncoder.encode(createUserPayload.password)
         newUser.lastTenantId = tenantId
-        newUser.isEnableCreateCompany = false
         val savedUser = userRepository.save(newUser)
 
-        // Assign the role to the user
+        addRoleForUser(savedUser.id, RoleCode.SUB_USER)
+        // Assign the tenant role to the user
         val tenantRoles = tenantService.findTenantRolesByCodes(createUserPayload.tenantRoleCodes)
         for (tenantRole in tenantRoles) {
             addUserTenantRole(tenantId, tenantRole, savedUser.id)
@@ -103,7 +105,6 @@ class UserService(
                 email = user.email,
                 isEnabled = user.isEnabled,
                 isLocked = user.isLocked,
-                isEnableCreateCompany = user.isEnableCreateCompany,
                 lastLoginAt = user.lastLoginAt,
                 createdAt = user.createdAt,
                 updatedAt = user.updatedAt,
@@ -247,12 +248,26 @@ class UserService(
         }
     }
 
+    @PreAuthorize("hasRole('REGISTERED_USER')")
     fun createTenantForUser(payload: CreateCompanyPayload, user: UserContext): Tenant {
         // TODO: check for exist user tenant company
         val tenant = tenantService.createNewTenant(payload)
         val tenantRole = tenantService.findTenantRoleByCode(TenantRoleCode.OWNER)
         addUserTenantRole(tenant.id, tenantRole, user.id)
         return tenant
+    }
+
+    fun addRoleForUser(userId: Long, roleCode: RoleCode) {
+        val user = userRepository.findById(userId).orElseThrow {
+            IllegalArgumentException("User with ID ${userId} not found")
+        }
+        val role = roleRepository.findByCode(roleCode.code)
+        if (role == null) throw IllegalArgumentException("Role with code ${roleCode.code} not found.")
+
+        if (!user.roles.contains(role)) {
+            user.roles = user.roles + role
+            userRepository.save(user)
+        }
     }
 
     fun addUserTenantRole(
@@ -282,6 +297,7 @@ class UserService(
 
     private fun signup(user: User): LoginPayload {
         val savedUser: User = userRepository.saveAndFlush(user)
+        addRoleForUser(savedUser.id, RoleCode.REGISTERED_USER)
         return login(savedUser)
     }
 
@@ -301,7 +317,6 @@ class UserService(
             email = this.email,
             isEnabled = this.isEnabled,
             isLocked = this.isLocked,
-            isEnableCreateCompany = this.isEnableCreateCompany,
             lastLoginAt = this.lastLoginAt,
             createdAt = this.createdAt,
             updatedAt = this.updatedAt,
@@ -317,7 +332,6 @@ class UserService(
             password = this.passwordHash,
             isEnabled = this.isEnabled,
             isLocked = this.isLocked,
-            isEnableCreateCompany = this.isEnableCreateCompany,
             currentTenant = this.toCurrentTenant(tenantId),
             tenants = this.getTenantsInfo(),
             roles = this.roles.map { it -> it.toRoleContext() }.toList()
