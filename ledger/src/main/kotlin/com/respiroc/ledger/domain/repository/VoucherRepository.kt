@@ -30,4 +30,6 @@ interface VoucherRepository : CustomJpaRepository<Voucher, Long> {
     """
     )
     fun findFirstEmptyVoucher(): Voucher?
+    
+    fun findFirstByOrderByCreatedAtDesc(): Voucher?
 }

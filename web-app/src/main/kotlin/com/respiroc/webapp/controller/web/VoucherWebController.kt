@@ -24,6 +24,7 @@ import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
+import jakarta.servlet.http.HttpServletResponse
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.*
@@ -83,6 +84,7 @@ class VoucherWebController(
         }
 
         val attachments = voucherAttachmentService.findAttachmentsByVoucherId(id)
+        val isLastVoucher = voucherApi.isLastCreatedVoucher(id)
 
         setupModelAttributes(model)
         model.addAttribute("companyCurrencyCode", countryCode())
@@ -91,6 +93,7 @@ class VoucherWebController(
         model.addAttribute("voucherId", id)
         model.addAttribute("voucherDate", voucher.date.toString())
         model.addAttribute("attachments", attachments)
+        model.addAttribute("isLastVoucher", isLastVoucher)
         model.addAttribute("shortcutAction", ShortcutRegistry.getByScreen(ShortcutScreen.VOUCHERS_ADVANCED))
         return "voucher/advanced-voucher"
     }
@@ -166,24 +169,7 @@ class VoucherHTMXController(
         return "fragments/empty"
     }
 
-    @GetMapping("/add-posting-line")
-    @HxRequest
-    fun addPostingLineHTMX(
-        @RequestParam(defaultValue = "0") rowCounter: Int,
-        model: Model
-    ): String {
-        val vatCodes = vatService.findAllVatCodes()
-        val supportedCurrencies = currencyService.getSupportedCurrencies()
-        val initialDate = LocalDate.now()
 
-        model.addAttribute("rowCounter", rowCounter)
-        model.addAttribute("defaultVatCode", vatCodes.first().code)
-        model.addAttribute("companyCurrencyCode", countryCode())
-        model.addAttribute("supportedCurrencies", supportedCurrencies)
-        model.addAttribute("initialDate", initialDate)
-
-        return "fragments/posting-line-row"
-    }
 
     @PostMapping("/update-balance")
     @HxRequest
@@ -216,6 +202,13 @@ class VoucherHTMXController(
             model.addAttribute("balance", "0.00 $fallbackCurrency")
             return "fragments/balance-row-simple"
         }
+    }
+
+    @DeleteMapping("/delete/{voucherId}")
+    @HxRequest
+    fun deleteVoucherHTMX(@PathVariable voucherId: Long): String {
+        voucherApi.deleteVoucher(voucherId)
+        return "redirect:htmx:/voucher/overview"
     }
 
     // -------------------------------

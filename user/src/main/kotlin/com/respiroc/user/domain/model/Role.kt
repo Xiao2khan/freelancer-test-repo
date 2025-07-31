@@ -9,34 +9,38 @@ import java.time.Instant
 
 @Entity
 @Table(name = "roles")
-open class Role : Serializable {
+class Role : Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    open var id: Long = -1
+    var id: Long = -1
 
     @Size(max = 128)
     @Column(name = "name", nullable = false, length = 128)
-    open lateinit var name: String
+    lateinit var name: String
 
     @Size(max = 128)
     @Column(name = "code", nullable = false, length = 128)
-    open lateinit var code: String
+    lateinit var code: String
 
     @Size(max = 255)
     @Column(name = "description", nullable = false)
-    open lateinit var description: String
+    lateinit var description: String
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    open lateinit var createdAt: Instant
+    lateinit var createdAt: Instant
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    open lateinit var updatedAt: Instant
+    lateinit var updatedAt: Instant
 
     @ManyToMany(targetEntity = Permission::class, fetch = FetchType.EAGER)
-    @JoinTable(name = "role_permissions", joinColumns = [JoinColumn(name = "role_id")], inverseJoinColumns = [JoinColumn(name = "permission_id")])
-    open var permissions: Set<Permission> = HashSet()
+    @JoinTable(
+        name = "role_permissions",
+        joinColumns = [JoinColumn(name = "role_id")],
+        inverseJoinColumns = [JoinColumn(name = "permission_id")]
+    )
+    var permissions: Set<Permission> = HashSet()
 }

@@ -13,31 +13,31 @@ import java.time.Instant
 @Entity
 @Table(name = "tenants")
 @EntityListeners(AuditingEntityListener::class)
-open class Tenant : Serializable {
+class Tenant : Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    open var id: Long = -1
+    var id: Long = -1
 
     @Column(name = "slug", nullable = false, unique = true)
-    open var slug: String? = null
+    var slug: String? = null
 
     @Column(name = "company_id", nullable = false, updatable = false, insertable = false)
-    open var companyId: Long = -1
+    var companyId: Long = -1
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "company_id", nullable = false)
-    open lateinit var company: Company
+    lateinit var company: Company
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    open lateinit var createdAt: Instant
+    lateinit var createdAt: Instant
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    open lateinit var updatedAt: Instant
+    lateinit var updatedAt: Instant
 
     fun getCompanyName(): String {
         return company.name

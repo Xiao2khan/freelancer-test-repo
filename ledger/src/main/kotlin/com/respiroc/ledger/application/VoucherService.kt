@@ -1,5 +1,6 @@
 package com.respiroc.ledger.application
 
+import com.respiroc.attachment.domain.repository.AttachmentRepository
 import com.respiroc.ledger.application.payload.*
 import com.respiroc.ledger.domain.model.Posting
 import com.respiroc.ledger.domain.model.Voucher
@@ -18,7 +19,8 @@ class VoucherService(
     private val voucherRepository: VoucherRepository,
     private val postingRepository: PostingRepository,
     private val accountService: AccountService,
-    private val vatService: VatService
+    private val vatService: VatService,
+    private val attachmentRepository: AttachmentRepository
 ) : ContextAwareApi {
 
     fun createVoucher(payload: CreateVoucherPayload): VoucherPayload {
@@ -187,6 +189,23 @@ class VoucherService(
         if (nonZeroPostings.isNotEmpty()) {
             postingRepository.saveAll(nonZeroPostings)
         }
+    }
+
+    fun deleteVoucher(voucherId: Long) {
+        val voucher = voucherRepository.findById(voucherId)
+            .orElseThrow { ResourceNotFoundException("Voucher not found") }
+
+        if (!isLastCreatedVoucher(voucherId)) {
+            throw BusinessException("Only the last created voucher can be deleted")
+        }
+
+        voucherRepository.delete(voucher)
+        attachmentRepository.deleteOrphanedAttachments()
+    }
+
+    fun isLastCreatedVoucher(voucherId: Long): Boolean {
+        val lastVoucher = voucherRepository.findFirstByOrderByCreatedAtDesc()
+        return lastVoucher?.id == voucherId
     }
 
     private fun toVoucherSummary(voucher: Voucher) = VoucherSummaryPayload(

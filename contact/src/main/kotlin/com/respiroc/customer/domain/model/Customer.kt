@@ -8,32 +8,32 @@ import org.hibernate.annotations.TenantId
 
 @Entity
 @Table(name = "customers")
-open class Customer {
+class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    open var id: Long = -1
+    var id: Long = -1
 
     @TenantId
     @Column(name = "tenant_id", nullable = false, updatable = false)
-    open var tenantId: Long? = null
+    var tenantId: Long? = null
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tenant_id", nullable = false, updatable = false, insertable = false)
-    open lateinit var tenant: Tenant
+    lateinit var tenant: Tenant
 
     @Column(name = "company_id", nullable = true, updatable = false, insertable = false)
-    open var companyId: Long? = null
+    var companyId: Long? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = true)
-    open var company: Company? = null
+    var company: Company? = null
 
     @Column(name = "private_person_id", nullable = true, updatable = false, insertable = false)
-    open var personId: Long? = null
+    var personId: Long? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "private_person_id", nullable = true)
-    open var person: PrivatePerson? = null
+    var person: PrivatePerson? = null
 }

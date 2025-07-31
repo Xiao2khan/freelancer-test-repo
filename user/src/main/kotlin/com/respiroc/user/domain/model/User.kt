@@ -10,42 +10,42 @@ import java.time.Instant
 
 @Entity
 @Table(name = "users")
-open class User : Serializable {
+class User : Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    open var id: Long = -1
+    var id: Long = -1
 
     @Size(max = 128)
     @Column(name = "email", nullable = false)
-    open lateinit var email: String
+    lateinit var email: String
 
     @Size(max = 255)
     @Column(name = "password_hash", nullable = false)
-    open lateinit var passwordHash: String
+    lateinit var passwordHash: String
 
     @ColumnDefault("true")
     @Column(name = "is_enabled")
-    open var isEnabled: Boolean = true
+    var isEnabled: Boolean = true
 
     @ColumnDefault("false")
     @Column(name = "is_locked")
-    open var isLocked: Boolean = false
+    var isLocked: Boolean = false
 
     @Column(name = "last_login_at")
-    open var lastLoginAt: Instant? = null
+    var lastLoginAt: Instant? = null
 
     @Column(name = "last_tenant_id")
-    open var lastTenantId: Long? = null
+    var lastTenantId: Long? = null
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    open lateinit var createdAt: Instant
+    lateinit var createdAt: Instant
 
     @Column(name = "updated_at", nullable = false)
     @UpdateTimestamp
-    open lateinit var updatedAt: Instant
+    lateinit var updatedAt: Instant
 
     @ManyToMany(targetEntity = Role::class, fetch = FetchType.EAGER)
     @JoinTable(
@@ -53,8 +53,8 @@ open class User : Serializable {
         joinColumns = [JoinColumn(name = "user_id")],
         inverseJoinColumns = [JoinColumn(name = "role_id")]
     )
-    open var roles: List<Role> = ArrayList()
+    var roles: List<Role> = ArrayList()
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
-    open var userTenants: MutableSet<UserTenant> = HashSet()
+    var userTenants: MutableSet<UserTenant> = HashSet()
 }

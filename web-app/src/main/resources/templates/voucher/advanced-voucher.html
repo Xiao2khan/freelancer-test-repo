@@ -21,7 +21,7 @@
           th:hx-swap="'innerHTML'"
           th:hx-encoding="'multipart/form-data'"
           style="display:none">
-        <input type="file" name="files" id="file-input" multiple/>
+        <input type="file" name="files" id="file-input" multiple onchange="htmx.trigger(this.form, 'submit')"/>
         <input type="hidden" name="voucherId" th:value="${voucherId}"/>
     </form>
 
@@ -45,7 +45,7 @@
             <wa-card>
                 <div slot="header" class="wa-split">
                     <h4 th:text="${'Voucher ' + voucher.displayNumber}"/>
-                    <wa-button appearance="plain" th:text="#{voucher_upload_files}"/>
+                    <wa-button appearance="plain" th:text="#{voucher_upload_files}" onclick="document.getElementById('file-input').click()"/>
                 </div>
 
                 <!-- Voucher Information - Date and Description on same line -->
@@ -232,8 +232,12 @@
                                 </wa-input>
                             </td>
                             <td>
+                                <wa-button type="button" size="small" variant="neutral" tabindex="-1"
+                                           onclick="duplicatePostingLine(this)" style="margin-right: 4px;">
+                                    <wa-icon label="Duplicate posting row" name="copy"></wa-icon>
+                                </wa-button>
                                 <wa-button type="button" size="small" variant="danger" tabindex="-1"
-                                           th:onclick="'removePostingLine(this, ' + ${iterStat.index} + ')'">
+                                           onclick="removePostingLine(this)">
                                     <wa-icon label="Remove posting row" name="trash"></wa-icon>
                                 </wa-button>
                             </td>
@@ -253,20 +257,35 @@
                 </wa-scroller>
 
                 <div class="form-actions" style="margin-top: var(--wa-space-m)">
-                    <wa-button onclick="addPostingLine()"
-                               size="small"
-                               th:text="#{voucher_new_row}"
-                               type="button"
-                               variant="neutral"/>
+                    <div class="wa-cluster" style="justify-content: space-between; width: 100%;">
+                        <wa-button onclick="addPostingLine()"
+                                   size="small"
+                                   th:text="#{voucher_new_row}"
+                                   type="button"
+                                   variant="neutral"/>
 
-                    <wa-button class="disabled:r-opacity-25"
-                               id="saveButton"
-                               size="small"
-                               type="submit"
-                               variant="success">
-                        <span th:text="#{voucher_update}"></span>
-                        <wa-spinner slot="end" id="loading-indicator" class="htmx-indicator"></wa-spinner>
-                    </wa-button>
+                        <div class="wa-cluster">
+                            <wa-button th:if="${isLastVoucher}"
+                                       size="small"
+                                       type="button"
+                                       variant="danger"
+                                       th:hx-delete="@{/htmx/voucher/delete/{voucherId}(voucherId=${voucherId})}"
+                                       th:hx-target="'#r-callout'"
+                                       th:hx-target-error="'#r-callout'"
+                                       th:hx-confirm="'Are you sure you want to delete this voucher? This action cannot be undone.'">
+                                <span th:text="#{voucher_delete}"></span>
+                            </wa-button>
+
+                            <wa-button class="disabled:r-opacity-25"
+                                       id="saveButton"
+                                       size="small"
+                                       type="submit"
+                                       variant="success">
+                                <span th:text="#{voucher_update}"></span>
+                                <wa-spinner slot="end" id="loading-indicator" class="htmx-indicator"></wa-spinner>
+                            </wa-button>
+                        </div>
+                    </div>
                 </div>
             </wa-card>
         </form>

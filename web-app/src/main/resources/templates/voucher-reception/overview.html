@@ -19,19 +19,25 @@
           th:hx-swap="'outerHTML'"
           th:hx-encoding="'multipart/form-data'"
           style="display:none">
-        <input type="file" name="files" id="file-input" multiple/>
+        <input type="file" name="files" id="file-input" multiple onchange="htmx.trigger(this.form, 'submit')"/>
     </form>
 
     <div id="pageContent" class="r-voucher-reception-container">
         <wa-callout variant="neutral" class="r-voucher-reception">
-            <h1 class="wa-heading-xl" th:text="#{voucher_reception}"/>
-            <p class="wa-text">
-                <span th:text="#{voucher_reception_info}"/>
-                <wa-tag variant="brand" appearance="accent">
-                    <span th:text="${tenantSlug + '@ea.reai.no'}"/>
-                    <wa-copy-button th:value="${tenantSlug + '@ea.reai.no'}"></wa-copy-button>
-                </wa-tag>
-            </p>
+            <div class="wa-split">
+                <div>
+                    <h1 class="wa-heading-xl" th:text="#{voucher_reception}"/>
+                    <p class="wa-text">
+                        <span th:text="#{voucher_reception_info}"/>
+                        <wa-tag variant="brand" appearance="accent">
+                            <span th:text="${tenantSlug + '@ea.reai.no'}"/>
+                            <wa-copy-button th:value="${tenantSlug + '@ea.reai.no'}"></wa-copy-button>
+                        </wa-tag>
+                    </p>
+                </div>
+                <wa-button style="align-self: start;" appearance="outlined" size="small" th:text="#{voucher_upload_files}"
+                           onclick="document.getElementById('file-input').click()"/>
+            </div>
         </wa-callout>
 
         <div style="overflow-x: auto;">
@@ -76,7 +82,7 @@
 <div layout:fragment="aside">
     <div id="aside-split" style="height: 100%">
         <div id="pdf-container" style="height: 100%; overflow-y: hidden;">
-            <embed id="pdf-embed" type="application/pdf"/>
+            <iframe id="pdf-embed" type="application/pdf"></iframe>
         </div>
     </div>
 </div>

@@ -44,7 +44,7 @@ class VoucherReceptionWebController(
         val base64Data = Base64.getEncoder().encodeToString(document.attachment.fileData)
         val dataUrl = "data:application/pdf;base64,$base64Data"
         return ResponseEntity.ok().contentType(MediaType.TEXT_HTML)
-            .body("""<embed id="pdf-embed" type="application/pdf" src="$dataUrl" style="width: 100%; height: 100%; border: none;"/>""");
+            .body("""<iframe id="pdf-embed" type="application/pdf" src="$dataUrl" style="width: 100%; height: 100%; border: none;"></iframe>""");
     }
 }
 

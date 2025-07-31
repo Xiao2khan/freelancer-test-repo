@@ -145,8 +145,8 @@ class VoucherWebService(
         return postingLines.flatMapIndexed { index, line ->
             val originalAmount = line.amount!!
             val originalCurrency = line.currency
-            // Use the line's row number if available, otherwise use the index
-            val baseRowNumber = if (line.rowNumber >= 0) line.rowNumber else index
+            // Always use the array index to ensure consistent row numbering after deletions
+            val baseRowNumber = index
 
             val hasDebit = line.debitAccount.isNotBlank()
             val hasCredit = line.creditAccount.isNotBlank()
